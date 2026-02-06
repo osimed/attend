@@ -1,5 +1,8 @@
+import 'package:attend/features/calendar/blocs/calendar_bloc.dart';
 import 'package:attend/theme.dart';
+import 'package:attend/features/calendar/views/calendar_page.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -15,7 +18,10 @@ class Attend extends StatelessWidget {
       title: 'Attend',
       theme: MaterialTheme.light(),
       darkTheme: MaterialTheme.dark(),
-      home: const Scaffold(),
+      home: BlocProvider(
+        create: (_) => CalendarBloc(),
+        child: const CalendarPage(),
+      ),
       debugShowCheckedModeBanner: false,
     );
   }
