@@ -16,7 +16,7 @@ class DateTimeList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       itemExtent: _chipWidth + _chipMargin,
-      padding: EdgeInsets.only(top: 3, bottom: 3),
+      padding: const EdgeInsets.only(top: 5, bottom: 3),
       controller: ScrollController(initialScrollOffset: dateToOffset(month)),
       scrollDirection: .horizontal,
       itemBuilder: (context, index) {
@@ -33,7 +33,7 @@ class DateTimeList extends StatelessWidget {
                 ).add(HeaderPanelChangeDateTime(month: indexDate));
               },
               style: FilledButton.styleFrom(
-                padding: EdgeInsets.all(0),
+                padding: const EdgeInsets.all(0),
                 shape: RoundedRectangleBorder(
                   borderRadius: BorderRadius.all(
                     Radius.circular(
@@ -47,7 +47,7 @@ class DateTimeList extends StatelessWidget {
               ),
               child: Text(
                 indexDate.formatMonth(),
-                style: TextStyle(wordSpacing: -1.3),
+                style: const TextStyle(wordSpacing: -1.3),
               ),
             ),
           ),

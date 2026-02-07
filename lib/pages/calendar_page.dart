@@ -1,4 +1,5 @@
 import 'package:attend/core/extensions.dart';
+import 'package:attend/features/calendar_grid/views/calendar_grid.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_state.dart';
@@ -27,10 +28,10 @@ class CalendarPage extends StatelessWidget {
                 children: [
                   Text(
                     state.month.formatMonth(),
-                    style: TextStyle(fontSize: 18, wordSpacing: -2),
+                    style: const TextStyle(fontSize: 18, wordSpacing: -2),
                   ),
                   const SizedBox(width: 3),
-                  Icon(CupertinoIcons.chevron_down_circle_fill, size: 16),
+                  const Icon(CupertinoIcons.chevron_down_circle_fill, size: 16),
                 ],
               ),
             );
@@ -38,17 +39,25 @@ class CalendarPage extends StatelessWidget {
         ),
         actions: [
           IconButton(
-            icon: Icon(CupertinoIcons.person_add),
+            icon: const Icon(CupertinoIcons.person_add),
             onPressed: () {
               BlocProvider.of<HeaderPanelBloc>(
                 context,
               ).add(HeaderPanelChangeEmployee());
             },
           ),
-          IconButton(icon: Icon(CupertinoIcons.doc_text), onPressed: () {}),
+          IconButton(icon: const Icon(CupertinoIcons.doc_text), onPressed: () {}),
         ],
       ),
-      body: Column(children: [HeaderPanel()]),
+      body: const Column(
+        children: [
+          HeaderPanel(),
+          Flexible(child: Padding(
+            padding: EdgeInsets.all(2.0),
+            child: CalendarGrid(),
+          )),
+        ],
+      ),
     );
   }
 }

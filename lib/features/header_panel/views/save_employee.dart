@@ -34,12 +34,12 @@ class _SaveEmployeeState extends State<SaveEmployee> {
           children: [
             TextFormField(
               controller: firstNameController,
-              decoration: InputDecoration(labelText: "prénom", filled: true),
+              decoration: const InputDecoration(labelText: "prénom", filled: true),
             ),
             const SizedBox(height: 10),
             TextFormField(
               controller: lastNameController,
-              decoration: InputDecoration(labelText: "nom", filled: true),
+              decoration: const InputDecoration(labelText: "nom", filled: true),
             ),
             const SizedBox(height: 10),
             Row(
@@ -48,7 +48,7 @@ class _SaveEmployeeState extends State<SaveEmployee> {
                 Expanded(
                   child: DropdownButtonFormField<Team>(
                     initialValue: team,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: "équipe",
                       filled: true,
                     ),
@@ -64,7 +64,7 @@ class _SaveEmployeeState extends State<SaveEmployee> {
                   child: TextFormField(
                     controller: collectedController,
                     keyboardType: .number,
-                    decoration: InputDecoration(
+                    decoration: const InputDecoration(
                       labelText: "épargne",
                       filled: true,
                     ),
@@ -92,7 +92,7 @@ class _SaveEmployeeState extends State<SaveEmployee> {
 
                       style: FilledButton.styleFrom(minimumSize: Size.infinite),
                       icon: const Icon(Icons.delete),
-                      label: Text("Supprimer"),
+                      label: const Text("Supprimer"),
                     ),
                   ),
                 ],
