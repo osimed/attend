@@ -1,4 +1,8 @@
+import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
+import 'package:attend/features/calendar_grid/blocs/calendar_grid_state.dart';
+import 'package:attend/features/calendar_grid/views/calendar_day.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart';
 
 const _cellWidth = 65.0;
@@ -9,26 +13,36 @@ class CalendarGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return TableView.builder(
-      rowCount: 15,
-      columnCount: 15,
-      pinnedRowCount: 1,
-      pinnedColumnCount: 1,
-      diagonalDragBehavior: .free,
+    return BlocBuilder<CalendarGridBloc, CalendarGridState>(
+      builder: (context, state) {
+        return TableView.builder(
+          rowCount: 15,
+          columnCount:
+              DateUtils.getDaysInMonth(state.month.year, state.month.month) + 1,
+          pinnedRowCount: 1,
+          pinnedColumnCount: 1,
+          diagonalDragBehavior: .free,
 
-      rowBuilder: (index) {
-        return _buildTableSpan(context, index, true);
-      },
+          rowBuilder: (index) {
+            return _buildTableSpan(context, index, true);
+          },
 
-      columnBuilder: (index) {
-        return _buildTableSpan(context, index, false);
-      },
-      cellBuilder: (context, v) {
-        return TableViewCell(
-          child: InkWell(
-            onTap: () {},
-            child: const Placeholder(),
-          ),
+          columnBuilder: (index) {
+            return _buildTableSpan(context, index, false);
+          },
+          cellBuilder: (context, vicinity) {
+            if (vicinity.row == 0 && vicinity.column == 0) {
+              return const TableViewCell(child: SizedBox.shrink());
+            }
+            if (vicinity.row == 0) {
+              return TableViewCell(
+                child: CalendarDay(month: state.month, vicinity: vicinity),
+              );
+            }
+            return TableViewCell(
+              child: InkWell(onTap: () {}, child: const Placeholder()),
+            );
+          },
         );
       },
     );

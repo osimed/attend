@@ -1,3 +1,4 @@
+import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/pages/calendar_page.dart';
 import 'package:attend/theme.dart';
@@ -18,8 +19,11 @@ class Attend extends StatelessWidget {
       title: 'Attend',
       theme: MaterialTheme.light(),
       darkTheme: MaterialTheme.dark(),
-      home: BlocProvider(
-        create: (_) => HeaderPanelBloc(),
+      home: MultiBlocProvider(
+        providers: [
+          BlocProvider(create: (_) => HeaderPanelBloc()),
+          BlocProvider(create: (_) => CalendarGridBloc()),
+        ],
         child: const CalendarPage(),
       ),
       debugShowCheckedModeBanner: false,

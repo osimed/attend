@@ -1,4 +1,6 @@
 import 'package:attend/core/extensions.dart';
+import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
+import 'package:attend/features/calendar_grid/blocs/calendar_grid_event.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
 import 'package:flutter/material.dart';
@@ -31,6 +33,9 @@ class DateTimeList extends StatelessWidget {
                 BlocProvider.of<HeaderPanelBloc>(
                   context,
                 ).add(HeaderPanelChangeDateTime(month: indexDate));
+                BlocProvider.of<CalendarGridBloc>(
+                  context,
+                ).add(CalendarGridLoadMonth(month: indexDate));
               },
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.all(0),
