@@ -24,10 +24,16 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
     HeaderPanelChangeEmployee event,
     Emitter<HeaderPanelState> emit,
   ) async {
+    final isOpen = switch (state) {
+      HeaderPanelEmployee state =>
+        state.isOpen && state.employee?.id == event.employee?.id,
+      _ => state.isOpen,
+    };
     emit(
       HeaderPanelEmployee(
-        isOpen: !(state is HeaderPanelEmployee && state.isOpen),
+        isOpen: !isOpen,
         month: state.month,
+        employee: event.employee,
       ),
     );
   }

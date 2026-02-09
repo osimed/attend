@@ -1,7 +1,7 @@
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_state.dart';
 import 'package:attend/features/header_panel/views/datetime_list.dart';
-import 'package:attend/features/header_panel/views/save_employee.dart';
+import 'package:attend/features/header_panel/views/edit_employee.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
@@ -25,7 +25,7 @@ class HeaderPanel extends StatelessWidget {
             HeaderPanelEmployee state => SizedBox(
               width: double.infinity,
               height: state.isOpen ? null : 0,
-              child: SaveEmployee(employee: state.employee),
+              child: EditEmployee(employee: state.employee),
             ),
           };
         },

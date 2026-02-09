@@ -1,4 +1,6 @@
+import 'package:attend/core/locator.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
+import 'package:attend/features/calendar_grid/blocs/calendar_grid_event.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/pages/calendar_page.dart';
 import 'package:attend/theme.dart';
@@ -7,6 +9,7 @@ import 'package:flutter_bloc/flutter_bloc.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
+  setupLocator();
   runApp(const Attend());
 }
 
@@ -21,8 +24,11 @@ class Attend extends StatelessWidget {
       darkTheme: MaterialTheme.dark(),
       home: MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => HeaderPanelBloc()),
-          BlocProvider(create: (_) => CalendarGridBloc()),
+          BlocProvider(create: (_) => locator.get<HeaderPanelBloc>()),
+          BlocProvider(
+            create: (_) =>
+                locator.get<CalendarGridBloc>()..add(CalendarGridLoadMonth()),
+          ),
         ],
         child: const CalendarPage(),
       ),

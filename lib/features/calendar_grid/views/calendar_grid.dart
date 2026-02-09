@@ -1,6 +1,10 @@
+import 'package:attend/core/locator.dart';
+import 'package:attend/database/database.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_state.dart';
 import 'package:attend/features/calendar_grid/views/calendar_day.dart';
+import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
+import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart';
@@ -13,20 +17,31 @@ class CalendarGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocBuilder<CalendarGridBloc, CalendarGridState>(
+    return BlocSelector<
+      CalendarGridBloc,
+      CalendarGridState,
+      CalendarGridLoaded?
+    >(
+      selector: (state) => state is CalendarGridLoaded ? state : null,
       builder: (context, state) {
+        if (state == null) {
+          return const SizedBox.shrink();
+        }
         return TableView.builder(
-          rowCount: 15,
+          rowCount: state.employees.length + 1,
           columnCount:
               DateUtils.getDaysInMonth(state.month.year, state.month.month) + 1,
+          horizontalDetails: ScrollableDetails.horizontal(
+            controller: ScrollController(
+              initialScrollOffset: (state.month.day - 1) * _cellWidth,
+            ),
+          ),
           pinnedRowCount: 1,
           pinnedColumnCount: 1,
           diagonalDragBehavior: .free,
-
           rowBuilder: (index) {
             return _buildTableSpan(context, index, true);
           },
-
           columnBuilder: (index) {
             return _buildTableSpan(context, index, false);
           },
@@ -39,12 +54,43 @@ class CalendarGrid extends StatelessWidget {
                 child: CalendarDay(month: state.month, vicinity: vicinity),
               );
             }
+            final employee = state.employees[vicinity.row - 1];
+            if (vicinity.column == 0) {
+              return TableViewCell(child: _employeeNameCell(employee));
+            }
             return TableViewCell(
               child: InkWell(onTap: () {}, child: const Placeholder()),
             );
           },
         );
       },
+    );
+  }
+
+  Widget _employeeNameCell(Employee employee) {
+    return InkWell(
+      onLongPress: () {
+        locator.get<HeaderPanelBloc>().add(
+          HeaderPanelChangeEmployee(employee: employee),
+        );
+      },
+      child: Padding(
+        padding: const EdgeInsets.all(6.0),
+        child: Column(
+          mainAxisAlignment: .center,
+          crossAxisAlignment: .start,
+          children: [
+            Text(
+              employee.lastName.toUpperCase(),
+              style: const TextStyle(fontSize: 15, fontWeight: .w800),
+            ),
+            Text(
+              employee.firstName.toUpperCase(),
+              style: const TextStyle(fontSize: 13, fontWeight: .w300),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
