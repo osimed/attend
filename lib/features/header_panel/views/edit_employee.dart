@@ -89,8 +89,8 @@ class _EditEmployeeState extends State<EditEmployee> {
                         BlocSelector<HeaderPanelBloc, HeaderPanelState, Team>(
                           selector: (state) {
                             return state is HeaderPanelEmployee
-                              ? state.employee?.team ?? .exp
-                              : .exp;
+                                ? state.employee?.team ?? .exp
+                                : .exp;
                           },
                           builder: (context, stateTeam) {
                             return DropdownButtonFormField<Team>(
@@ -168,7 +168,17 @@ class _EditEmployeeState extends State<EditEmployee> {
                     const SizedBox(width: 10),
                     Expanded(
                       child: FilledButton.tonalIcon(
-                        onPressed: widget.employee == null ? null : () {},
+                        onPressed: widget.employee == null
+                            ? null
+                            : () async {
+                                await locator
+                                    .get<EmployeeService>()
+                                    .deleteEmployee(widget.employee!);
+
+                                locator.get<CalendarGridBloc>().add(
+                                  CalendarGridLoadMonth(),
+                                );
+                              },
                         style: FilledButton.styleFrom(
                           minimumSize: Size.infinite,
                         ),

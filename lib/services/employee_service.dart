@@ -21,4 +21,8 @@ class EmployeeService {
       mode: .insertOrReplace,
     );
   }
+
+  Future<bool> deleteEmployee(Employee employee) async {
+    return _database.employeeTable.deleteOne(employee);
+  }
 }
