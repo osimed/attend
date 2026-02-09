@@ -27,7 +27,7 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
     final isOpen = switch (state) {
       HeaderPanelEmployee state =>
         state.isOpen && state.employee?.id == event.employee?.id,
-      _ => state.isOpen,
+      _ => false,
     };
     emit(
       HeaderPanelEmployee(
