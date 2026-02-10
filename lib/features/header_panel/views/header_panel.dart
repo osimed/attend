@@ -17,17 +17,17 @@ class HeaderPanel extends StatelessWidget {
       child: BlocBuilder<HeaderPanelBloc, HeaderPanelState>(
         builder: (context, state) {
           return switch (state) {
-            HeaderPanelDateTime state => SizedBox(
+            PickingAMonth state => SizedBox(
               width: double.infinity,
               height: state.isOpen ? 50 : 0,
               child: DateTimeList(month: state.month),
             ),
-            HeaderPanelEmployee state => SizedBox(
+            EditingEmployee state => SizedBox(
               width: double.infinity,
               height: state.isOpen ? null : 0,
               child: EditEmployee(employee: state.employee),
             ),
-            HeaderPanelAttendance state => SizedBox(
+            EditingAttendance state => SizedBox(
               width: double.infinity,
               height: state.isOpen ? 240 : 0,
               child: PointingView(

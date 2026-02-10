@@ -1,21 +1,19 @@
-import 'package:attend/core/locator.dart';
 import 'package:attend/database/database.dart';
-import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
-import 'package:attend/features/calendar_grid/blocs/calendar_grid_event.dart';
-import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart'
-    show TableVicinity;
+import 'package:flutter/material.dart' show DateUtils;
 
 class AttendService {
-  final _database = locator.get<AppDatabase>();
+  final AppDatabase _database;
 
-  Future<List<EmployeeWithAttendances>> loadEmployees(DateTime month) async {
-    return _database.loadAttendances(month);
+  AttendService(this._database);
+
+  Future<List<CalendarRow>> loadCalendar(DateTime month) async {
+    final days = DateUtils.getDaysInMonth(month.year, month.month);
+    final start = DateTime(month.year, month.month);
+    final end = DateTime(month.year, month.month, days);
+    return _database.loadCalendar(start, end);
   }
 
-  Future<void> saveAttendance(Attendance attendance, TableVicinity cell) async {
-    locator.get<CalendarGridBloc>().add(
-      CalendarGridUpdateCell(attendance: attendance, cell: cell),
-    );
+  Future<void> saveAttendance(Attendance attendance) async {
     return _database.saveAttendance(attendance);
   }
 

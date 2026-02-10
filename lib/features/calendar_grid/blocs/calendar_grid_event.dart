@@ -4,20 +4,18 @@ import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart'
 
 sealed class CalendarGridEvent {}
 
-class CalendarGridLoadMonth extends CalendarGridEvent {
+class LoadMonthlyCalendar extends CalendarGridEvent {
   final DateTime? month;
 
-  CalendarGridLoadMonth({this.month});
+  LoadMonthlyCalendar({this.month});
 }
 
-class CalendarGridUpdateCell extends CalendarGridEvent {
-  final DateTime? month;
-  final Attendance attendance;
+class RefreshCalendarCell extends CalendarGridEvent {
   final TableVicinity cell;
+  final Attendance attendance;
 
-  CalendarGridUpdateCell({
-    this.month,
-    required this.attendance,
+  RefreshCalendarCell({
     required this.cell,
+    required this.attendance,
   });
 }

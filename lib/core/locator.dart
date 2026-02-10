@@ -8,7 +8,7 @@ final locator = GetIt.instance;
 
 void setupLocator() {
   locator.registerLazySingleton(() => AppDatabase());
-  locator.registerLazySingleton(() => AttendService());
-  locator.registerLazySingleton(() => CalendarGridBloc());
-  locator.registerLazySingleton(() => HeaderPanelBloc());
+  locator.registerLazySingleton(() => AttendService(locator.get<AppDatabase>()));
+  locator.registerLazySingleton(() => CalendarGridBloc(locator.get<AttendService>()));
+  locator.registerLazySingleton(() => HeaderPanelBloc(locator.get<AttendService>()));
 }

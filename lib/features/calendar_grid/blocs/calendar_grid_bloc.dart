@@ -1,35 +1,44 @@
-import 'package:attend/core/locator.dart';
+import 'package:attend/database/database.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_event.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_state.dart';
 import 'package:attend/services/attend_service.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
 class CalendarGridBloc extends Bloc<CalendarGridEvent, CalendarGridState> {
-  final employeeService = locator.get<AttendService>();
+  final AttendService _attendService;
 
-  CalendarGridBloc()
-    : super(CalendarGridLoaded(month: DateTime.now(), employees: [])) {
-    on<CalendarGridLoadMonth>(_onCalendarGridLoadMonth);
-    on<CalendarGridUpdateCell>(_onCalendarGridUpdateCell);
+  CalendarGridBloc(this._attendService) : super(MonthlyCalendarLoaded.empty()) {
+    on<LoadMonthlyCalendar>(_onLoadMonthlyCalendar);
+    on<RefreshCalendarCell>(_onRefreshCalendarCell);
   }
 
-  Future<void> _onCalendarGridLoadMonth(
-    CalendarGridLoadMonth event,
+  Future<void> _onLoadMonthlyCalendar(
+    LoadMonthlyCalendar event,
     Emitter<CalendarGridState> emit,
   ) async {
     final month = event.month ?? state.month;
-    final employees = await employeeService.loadEmployees(month);
-    emit(CalendarGridLoaded(month: month, employees: employees));
+    final calendar = await _attendService.loadCalendar(month);
+    emit(MonthlyCalendarLoaded(month: month, calendar: calendar));
   }
 
-  Future<void> _onCalendarGridUpdateCell(
-    CalendarGridUpdateCell event,
+  Future<void> _onRefreshCalendarCell(
+    RefreshCalendarCell event,
     Emitter<CalendarGridState> emit,
   ) async {
+    final updatedCalendar = [
+      for (final row in state.calendar)
+        if (row.employee.id == event.attendance.employeeId)
+          CalendarRow(row.employee, {
+            ...row.attendances,
+            event.attendance.date.day: event.attendance,
+          })
+        else
+          row,
+    ];
     emit(
-      CalendarGridUpdated(
-        month: event.month ?? state.month,
-        attendance: event.attendance,
+      CalendarCellRefreshed(
+        month: state.month,
+        calendar: updatedCalendar,
         cell: event.cell,
       ),
     );

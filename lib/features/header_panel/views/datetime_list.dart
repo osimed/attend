@@ -32,10 +32,10 @@ class DateTimeList extends StatelessWidget {
               onPressed: () {
                 BlocProvider.of<HeaderPanelBloc>(
                   context,
-                ).add(HeaderPanelChangeDateTime(month: indexDate));
+                ).add(SeekToMonth(picked: indexDate));
                 BlocProvider.of<CalendarGridBloc>(
                   context,
-                ).add(CalendarGridLoadMonth(month: indexDate));
+                ).add(LoadMonthlyCalendar(month: indexDate));
               },
               style: FilledButton.styleFrom(
                 padding: const EdgeInsets.all(0),

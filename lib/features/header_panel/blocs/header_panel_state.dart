@@ -9,25 +9,29 @@ sealed class HeaderPanelState {
   const HeaderPanelState({required this.month, this.isOpen = false});
 }
 
-class HeaderPanelDateTime extends HeaderPanelState {
-  const HeaderPanelDateTime({required super.month, super.isOpen});
+class PickingAMonth extends HeaderPanelState {
+  const PickingAMonth({required super.month, super.isOpen});
 }
 
-class HeaderPanelEmployee extends HeaderPanelState {
+class EditingEmployee extends HeaderPanelState {
   final Employee? employee;
 
-  const HeaderPanelEmployee({
-    required super.month,
-    super.isOpen,
-    this.employee,
-  });
+  const EditingEmployee({required super.month, super.isOpen, this.employee});
 }
 
-class HeaderPanelAttendance extends HeaderPanelState {
+class EmployeeSaved extends EditingEmployee {
+  const EmployeeSaved({required super.month, super.isOpen, super.employee});
+}
+
+class EmployeeDeleted extends EditingEmployee {
+  const EmployeeDeleted({required super.month, super.isOpen, super.employee});
+}
+
+class EditingAttendance extends HeaderPanelState {
   final TableVicinity cell;
   final Attendance attendance;
 
-  const HeaderPanelAttendance({
+  const EditingAttendance({
     required super.month,
     super.isOpen,
     required this.cell,

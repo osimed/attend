@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
-import 'package:flutter/material.dart' show DateUtils, TimeOfDay;
+import 'package:flutter/material.dart' show TimeOfDay;
 
 part 'database.g.dart';
 
@@ -52,11 +52,11 @@ class TimeOfDayConverter extends TypeConverter<TimeOfDay, int> {
   int toSql(TimeOfDay value) => value.hour * 60 + value.minute;
 }
 
-class EmployeeWithAttendances {
+class CalendarRow {
   final Employee employee;
-  final Map<DateTime, Attendance> attendances;
+  final Map<int, Attendance> attendances;
 
-  EmployeeWithAttendances(this.employee, this.attendances);
+  CalendarRow(this.employee, this.attendances);
 }
 
 @DriftDatabase(tables: [EmployeeTable, AttendanceTable])
@@ -66,37 +66,29 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 1;
 
-  Future<List<EmployeeWithAttendances>> loadAttendances(DateTime month) async {
-    final days = DateUtils.getDaysInMonth(month.year, month.month);
-    final lower = DateTime(month.year, month.month);
-    final higher = DateTime(month.year, month.month, days);
-
+  Future<List<CalendarRow>> loadCalendar(DateTime start, DateTime end) async {
     final query = select(employeeTable).join([
       leftOuterJoin(
         attendanceTable,
         attendanceTable.employeeId.equalsExp(employeeTable.id) &
-            attendanceTable.date.isBetweenValues(lower, higher),
+            attendanceTable.date.isBetweenValues(start, end),
       ),
     ]);
 
     final result = await query.get();
-
-    final map = <int, EmployeeWithAttendances>{};
+    final calendar = <int, CalendarRow>{};
 
     for (final row in result) {
       final empl = row.readTable(employeeTable);
       final attn = row.readTableOrNull(attendanceTable);
 
-      final entry = map.putIfAbsent(
-        empl.id,
-        () => EmployeeWithAttendances(empl, {}),
-      );
-
+      CalendarRow calRow() => CalendarRow(empl, {});
+      final entry = calendar.putIfAbsent(empl.id, calRow);
       if (attn != null) {
-        entry.attendances[attn.date] = attn;
+        entry.attendances[attn.date.day] = attn;
       }
     }
-    return map.values.toList();
+    return calendar.values.toList();
   }
 
   Future<void> saveAttendance(Attendance attendance) async {

@@ -1,4 +1,6 @@
 import 'package:attend/core/extensions.dart';
+import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
+import 'package:attend/features/calendar_grid/blocs/calendar_grid_event.dart';
 import 'package:attend/features/calendar_grid/views/calendar_grid.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
@@ -13,50 +15,66 @@ class CalendarPage extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      appBar: AppBar(
-        title: BlocBuilder<HeaderPanelBloc, HeaderPanelState>(
-          builder: (context, state) {
-            return TextButton(
-              onPressed: () {
-                BlocProvider.of<HeaderPanelBloc>(
-                  context,
-                ).add(HeaderPanelChangeDateTime());
-              },
-              child: Row(
-                mainAxisSize: .min,
-                children: [
-                  Text(
-                    state.month.formatMonth(),
-                    style: const TextStyle(fontSize: 18, wordSpacing: -2),
-                  ),
-                  const SizedBox(width: 3),
-                  const Icon(CupertinoIcons.chevron_down_circle_fill, size: 16),
-                ],
-              ),
-            );
-          },
-        ),
-        actions: [
-          IconButton(
-            icon: const Icon(CupertinoIcons.person_add),
-            onPressed: () {
-              BlocProvider.of<HeaderPanelBloc>(
-                context,
-              ).add(HeaderPanelChangeEmployee());
+    return BlocListener<HeaderPanelBloc, HeaderPanelState>(
+      listener: (context, state) {
+        if (state is EmployeeDeleted || state is EmployeeSaved) {
+          context.read<CalendarGridBloc>().add(LoadMonthlyCalendar());
+        }
+        if (state is EditingAttendance) {
+          context.read<CalendarGridBloc>().add(
+            RefreshCalendarCell(attendance: state.attendance, cell: state.cell),
+          );
+        }
+      },
+      child: Scaffold(
+        appBar: AppBar(
+          title: BlocBuilder<HeaderPanelBloc, HeaderPanelState>(
+            builder: (context, state) {
+              return TextButton(
+                onPressed: () {
+                  context.read<HeaderPanelBloc>().add(SeekToMonth());
+                },
+                child: Row(
+                  mainAxisSize: .min,
+                  children: [
+                    Text(
+                      state.month.formatMonth(),
+                      style: const TextStyle(fontSize: 18, wordSpacing: -2),
+                    ),
+                    const SizedBox(width: 3),
+                    const Icon(
+                      CupertinoIcons.chevron_down_circle_fill,
+                      size: 16,
+                    ),
+                  ],
+                ),
+              );
             },
           ),
-          IconButton(icon: const Icon(CupertinoIcons.doc_text), onPressed: () {}),
-        ],
-      ),
-      body: const Column(
-        children: [
-          HeaderPanel(),
-          Flexible(child: Padding(
-            padding: EdgeInsets.all(2.0),
-            child: CalendarGrid(),
-          )),
-        ],
+          actions: [
+            IconButton(
+              icon: const Icon(CupertinoIcons.person_add),
+              onPressed: () {
+                context.read<HeaderPanelBloc>().add(SelectEmployee());
+              },
+            ),
+            IconButton(
+              icon: const Icon(CupertinoIcons.doc_text),
+              onPressed: () {},
+            ),
+          ],
+        ),
+        body: const Column(
+          children: [
+            HeaderPanel(),
+            Flexible(
+              child: Padding(
+                padding: EdgeInsets.all(2.0),
+                child: CalendarGrid(),
+              ),
+            ),
+          ],
+        ),
       ),
     );
   }

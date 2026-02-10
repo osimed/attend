@@ -27,7 +27,7 @@ class Attend extends StatelessWidget {
           BlocProvider(create: (_) => locator.get<HeaderPanelBloc>()),
           BlocProvider(
             create: (_) =>
-                locator.get<CalendarGridBloc>()..add(CalendarGridLoadMonth()),
+                locator.get<CalendarGridBloc>()..add(LoadMonthlyCalendar()),
           ),
         ],
         child: const CalendarPage(),

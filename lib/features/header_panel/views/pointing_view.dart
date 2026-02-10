@@ -1,11 +1,10 @@
 import 'package:attend/core/extensions.dart';
-import 'package:attend/core/locator.dart';
 import 'package:attend/database/database.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
-import 'package:attend/services/attend_service.dart';
 import 'package:drift/drift.dart' show Value;
 import 'package:flutter/material.dart';
+import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart'
     show TableVicinity;
 
@@ -36,6 +35,7 @@ class PointingView extends StatelessWidget {
                           : null,
                     ),
                     onPressed: () async {
+                      final bloc = context.read<HeaderPanelBloc>();
                       final enter = await showTimePicker(
                         context: context,
                         initialTime:
@@ -43,16 +43,13 @@ class PointingView extends StatelessWidget {
                             const TimeOfDay(hour: 08, minute: 00),
                       );
                       if (enter == null) return;
+
                       final newAtt = attendance.copyWith(
                         status: .p,
                         enter: Value(enter),
                       );
-                      await locator.get<AttendService>().saveAttendance(newAtt, cell);
-                      locator.get<HeaderPanelBloc>().add(
-                        HeaderPanelChangeAttendance(
-                          cell: cell,
-                          attendance: newAtt,
-                        ),
+                      bloc.add(
+                        SaveAttendance(cell: cell, attendance: newAtt),
                       );
                     },
                     child: Text(
@@ -75,6 +72,7 @@ class PointingView extends StatelessWidget {
                           : null,
                     ),
                     onPressed: () async {
+                      final bloc = context.read<HeaderPanelBloc>();
                       final leave = await showTimePicker(
                         context: context,
                         initialTime:
@@ -87,16 +85,8 @@ class PointingView extends StatelessWidget {
                         status: .p,
                         leave: Value(leave),
                       );
-                      await locator.get<AttendService>().saveAttendance(
-                        newAtt,
-                        cell,
-                      );
-
-                      locator.get<HeaderPanelBloc>().add(
-                        HeaderPanelChangeAttendance(
-                          cell: cell,
-                          attendance: newAtt,
-                        ),
+                      bloc.add(
+                        SaveAttendance(cell: cell, attendance: newAtt),
                       );
                     },
                     child: Text(
@@ -123,13 +113,9 @@ class PointingView extends StatelessWidget {
                   for (final status in Status.values)
                     if (status != .empty && status != .p)
                       TextButton(
-                        onPressed: () async {
-                          await locator.get<AttendService>().saveAttendance(
-                            attendance.copyWith(status: status),
-                            cell,
-                          );
-                          locator.get<HeaderPanelBloc>().add(
-                            HeaderPanelChangeAttendance(
+                        onPressed: () {
+                          context.read<HeaderPanelBloc>().add(
+                            SaveAttendance(
                               cell: cell,
                               attendance: attendance.copyWith(status: status),
                             ),

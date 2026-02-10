@@ -1,11 +1,8 @@
 import 'package:attend/core/extensions.dart';
-import 'package:attend/core/locator.dart';
 import 'package:attend/database/database.dart';
-import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
-import 'package:attend/features/calendar_grid/blocs/calendar_grid_event.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
+import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_state.dart';
-import 'package:attend/services/attend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -36,7 +33,7 @@ class _EditEmployeeState extends State<EditEmployee> {
   Widget build(BuildContext context) {
     return BlocListener<HeaderPanelBloc, HeaderPanelState>(
       listener: (context, state) {
-        if (state is HeaderPanelEmployee) {
+        if (state is EditingEmployee) {
           currentEmployeeId = state.employee?.id;
           firstNameController.text = state.employee?.firstName ?? '';
           lastNameController.text = state.employee?.lastName ?? '';
@@ -88,7 +85,7 @@ class _EditEmployeeState extends State<EditEmployee> {
                     child:
                         BlocSelector<HeaderPanelBloc, HeaderPanelState, Team>(
                           selector: (state) {
-                            return state is HeaderPanelEmployee
+                            return state is EditingEmployee
                                 ? state.employee?.team ?? .exp
                                 : .exp;
                           },
@@ -140,21 +137,20 @@ class _EditEmployeeState extends State<EditEmployee> {
                   children: [
                     Expanded(
                       child: FilledButton.icon(
-                        onPressed: () async {
+                        onPressed: () {
                           if (formKey.currentState!.validate()) {
-                            await locator.get<AttendService>().saveEmployee(
-                              Employee(
-                                id: currentEmployeeId ?? -1,
-                                firstName: firstNameController.text,
-                                lastName: lastNameController.text,
-                                team: team,
-                                collected:
-                                    collectedController.text.parseTime() ??
-                                    .zero,
+                            context.read<HeaderPanelBloc>().add(
+                              ConfirmSaveEmployee(
+                                Employee(
+                                  id: currentEmployeeId ?? -1,
+                                  firstName: firstNameController.text,
+                                  lastName: lastNameController.text,
+                                  team: team,
+                                  collected:
+                                      collectedController.text.parseTime() ??
+                                      .zero,
+                                ),
                               ),
-                            );
-                            locator.get<CalendarGridBloc>().add(
-                              CalendarGridLoadMonth(),
                             );
                           }
                         },
@@ -170,13 +166,9 @@ class _EditEmployeeState extends State<EditEmployee> {
                       child: FilledButton.tonalIcon(
                         onPressed: widget.employee == null
                             ? null
-                            : () async {
-                                await locator
-                                    .get<AttendService>()
-                                    .deleteEmployee(widget.employee!);
-
-                                locator.get<CalendarGridBloc>().add(
-                                  CalendarGridLoadMonth(),
+                            : () {
+                                context.read<HeaderPanelBloc>().add(
+                                  ConfirmDeleteEmployee(widget.employee!),
                                 );
                               },
                         style: FilledButton.styleFrom(

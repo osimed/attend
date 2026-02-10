@@ -4,22 +4,33 @@ import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart'
 
 sealed class HeaderPanelEvent {}
 
-class HeaderPanelChangeDateTime extends HeaderPanelEvent {
-  final DateTime? month;
+class SeekToMonth extends HeaderPanelEvent {
+  final DateTime? picked;
 
-  HeaderPanelChangeDateTime({this.month});
+  SeekToMonth({this.picked});
 }
 
-class HeaderPanelChangeEmployee extends HeaderPanelEvent {
-  final DateTime? month;
+class SelectEmployee extends HeaderPanelEvent {
   final Employee? employee;
 
-  HeaderPanelChangeEmployee({this.month, this.employee});
+  SelectEmployee({this.employee});
 }
 
-class HeaderPanelChangeAttendance extends HeaderPanelEvent {
+class ConfirmSaveEmployee extends HeaderPanelEvent {
+  final Employee employee;
+
+  ConfirmSaveEmployee(this.employee);
+}
+
+class ConfirmDeleteEmployee extends HeaderPanelEvent {
+  final Employee employee;
+
+  ConfirmDeleteEmployee(this.employee);
+}
+
+class SaveAttendance extends HeaderPanelEvent {
   final TableVicinity cell;
   final Attendance attendance;
 
-  HeaderPanelChangeAttendance({required this.cell, required this.attendance});
+  SaveAttendance({required this.cell, required this.attendance});
 }
