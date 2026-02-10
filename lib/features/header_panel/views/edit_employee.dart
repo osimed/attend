@@ -5,7 +5,7 @@ import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_event.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_state.dart';
-import 'package:attend/services/employee_service.dart';
+import 'package:attend/services/attend_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 
@@ -142,7 +142,7 @@ class _EditEmployeeState extends State<EditEmployee> {
                       child: FilledButton.icon(
                         onPressed: () async {
                           if (formKey.currentState!.validate()) {
-                            await locator.get<EmployeeService>().insertEmployee(
+                            await locator.get<AttendService>().saveEmployee(
                               Employee(
                                 id: currentEmployeeId ?? -1,
                                 firstName: firstNameController.text,
@@ -172,7 +172,7 @@ class _EditEmployeeState extends State<EditEmployee> {
                             ? null
                             : () async {
                                 await locator
-                                    .get<EmployeeService>()
+                                    .get<AttendService>()
                                     .deleteEmployee(widget.employee!);
 
                                 locator.get<CalendarGridBloc>().add(

@@ -1,4 +1,6 @@
 import 'package:attend/database/database.dart';
+import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart'
+    show TableVicinity;
 
 sealed class CalendarGridState {
   final DateTime month;
@@ -7,10 +9,18 @@ sealed class CalendarGridState {
 }
 
 class CalendarGridLoaded extends CalendarGridState {
-  final List<Employee> employees;
+  final List<EmployeeWithAttendances> employees;
+
   const CalendarGridLoaded({required super.month, required this.employees});
 }
 
 class CalendarGridUpdated extends CalendarGridState {
-  const CalendarGridUpdated({required super.month});
+  final Attendance attendance;
+  final TableVicinity cell;
+
+  const CalendarGridUpdated({
+    required super.month,
+    required this.attendance,
+    required this.cell,
+  });
 }

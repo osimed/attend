@@ -1,6 +1,6 @@
 import 'package:drift/drift.dart';
 import 'package:drift_flutter/drift_flutter.dart';
-import 'package:flutter/material.dart' show TimeOfDay;
+import 'package:flutter/material.dart' show DateUtils, TimeOfDay;
 
 part 'database.g.dart';
 
@@ -52,12 +52,83 @@ class TimeOfDayConverter extends TypeConverter<TimeOfDay, int> {
   int toSql(TimeOfDay value) => value.hour * 60 + value.minute;
 }
 
+class EmployeeWithAttendances {
+  final Employee employee;
+  final Map<DateTime, Attendance> attendances;
+
+  EmployeeWithAttendances(this.employee, this.attendances);
+}
+
 @DriftDatabase(tables: [EmployeeTable, AttendanceTable])
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
   int get schemaVersion => 1;
+
+  Future<List<EmployeeWithAttendances>> loadAttendances(DateTime month) async {
+    final days = DateUtils.getDaysInMonth(month.year, month.month);
+    final lower = DateTime(month.year, month.month);
+    final higher = DateTime(month.year, month.month, days);
+
+    final query = select(employeeTable).join([
+      leftOuterJoin(
+        attendanceTable,
+        attendanceTable.employeeId.equalsExp(employeeTable.id) &
+            attendanceTable.date.isBetweenValues(lower, higher),
+      ),
+    ]);
+
+    final result = await query.get();
+
+    final map = <int, EmployeeWithAttendances>{};
+
+    for (final row in result) {
+      final empl = row.readTable(employeeTable);
+      final attn = row.readTableOrNull(attendanceTable);
+
+      final entry = map.putIfAbsent(
+        empl.id,
+        () => EmployeeWithAttendances(empl, {}),
+      );
+
+      if (attn != null) {
+        entry.attendances[attn.date] = attn;
+      }
+    }
+    return map.values.toList();
+  }
+
+  Future<void> saveAttendance(Attendance attendance) async {
+    attendanceTable.insertOne(
+      AttendanceTableCompanion(
+        id: attendance.id != -1 ? Value(attendance.id) : const Value.absent(),
+        employeeId: Value(attendance.employeeId),
+        date: Value(attendance.date),
+        status: Value(attendance.status),
+        enter: Value(attendance.enter),
+        leave: Value(attendance.leave),
+      ),
+      mode: .insertOrReplace,
+    );
+  }
+
+  Future<void> saveEmployee(Employee employee) async {
+    employeeTable.insertOne(
+      EmployeeTableCompanion(
+        id: employee.id != -1 ? Value(employee.id) : const Value.absent(),
+        firstName: Value(employee.firstName),
+        lastName: Value(employee.lastName),
+        team: Value(employee.team),
+        collected: Value(employee.collected),
+      ),
+      mode: .insertOrReplace,
+    );
+  }
+
+  Future<bool> deleteEmployee(Employee employee) async {
+    return employeeTable.deleteOne(employee);
+  }
 
   static QueryExecutor _openConnection() {
     return driftDatabase(name: 'attend');

@@ -17,14 +17,10 @@ class CalendarGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return BlocSelector<
-      CalendarGridBloc,
-      CalendarGridState,
-      CalendarGridLoaded?
-    >(
-      selector: (state) => state is CalendarGridLoaded ? state : null,
+    return BlocBuilder<CalendarGridBloc, CalendarGridState>(
+      buildWhen: (previous, current) => current is CalendarGridLoaded,
       builder: (context, state) {
-        if (state == null) {
+        if (state is! CalendarGridLoaded) {
           return const SizedBox.shrink();
         }
         return TableView.builder(
@@ -56,10 +52,69 @@ class CalendarGrid extends StatelessWidget {
             }
             final employee = state.employees[vicinity.row - 1];
             if (vicinity.column == 0) {
-              return TableViewCell(child: _employeeNameCell(employee));
+              return TableViewCell(child: _employeeNameCell(employee.employee));
             }
+            final (y, m) = (state.month.year, state.month.month);
+            final date = DateTime(y, m, vicinity.column);
+            final att = employee.attendances[date];
+            // TODO: the state needs to be full not partial
             return TableViewCell(
-              child: InkWell(onTap: () {}, child: const Placeholder()),
+              child: BlocBuilder<CalendarGridBloc, CalendarGridState>(
+                buildWhen: (previous, current) {
+                  if (current is CalendarGridUpdated) {
+                    return current.cell == vicinity;
+                  }
+                  return false;
+                },
+                builder: (context, state) {
+                  Attendance? attendance = att;
+                  if (state is CalendarGridUpdated) {
+                    attendance = state.attendance;
+                  }
+                  return Padding(
+                    padding: const EdgeInsets.all(.5),
+                    child: Material(
+                      color: switch (attendance?.status) {
+                        .c => Colors.redAccent,
+                        .a => Colors.amber,
+                        .r => Colors.teal,
+                        .j => Colors.blueAccent,
+                        .m => Colors.lime.shade600,
+                        _ => null,
+                      },
+                      child: InkWell(
+                        onTap: () {
+                          locator.get<HeaderPanelBloc>().add(
+                            HeaderPanelChangeAttendance(
+                              cell: vicinity,
+                              attendance:
+                                  attendance ??
+                                  Attendance(
+                                    id: -1,
+                                    employeeId: employee.employee.id,
+                                    date: date,
+                                    status: .p,
+                                  ),
+                            ),
+                          );
+                        },
+                        child: switch (attendance?.status) {
+                          null || .empty => const SizedBox.shrink(),
+                          _ => Center(
+                            child: Text(
+                              attendance!.status.name.toUpperCase(),
+                              style: const TextStyle(
+                                fontSize: 16,
+                                fontWeight: .bold,
+                              ),
+                            ),
+                          ),
+                        },
+                      ),
+                    ),
+                  );
+                },
+              ),
             );
           },
         );

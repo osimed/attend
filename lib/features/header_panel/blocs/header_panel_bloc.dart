@@ -6,6 +6,7 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
   HeaderPanelBloc() : super(HeaderPanelDateTime(month: DateTime.now())) {
     on<HeaderPanelChangeDateTime>(_onHeaderPanelChangeDateTime);
     on<HeaderPanelChangeEmployee>(_onHeaderPanelChangeEmployee);
+    on<HeaderPanelChangeAttendance>(_onHeaderPanelChangeAttendance);
   }
 
   Future<void> _onHeaderPanelChangeDateTime(
@@ -34,6 +35,24 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
         isOpen: !isOpen,
         month: state.month,
         employee: event.employee,
+      ),
+    );
+  }
+
+  Future<void> _onHeaderPanelChangeAttendance(
+    HeaderPanelChangeAttendance event,
+    Emitter<HeaderPanelState> emit,
+  ) async {
+    final isOpen = switch (state) {
+      HeaderPanelAttendance _ => false,
+      _ => false,
+    };
+    emit(
+      HeaderPanelAttendance(
+        isOpen: !isOpen,
+        month: state.month,
+        attendance: event.attendance,
+        cell: event.cell,
       ),
     );
   }

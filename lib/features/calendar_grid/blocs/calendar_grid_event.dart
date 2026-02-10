@@ -1,4 +1,6 @@
 import 'package:attend/database/database.dart';
+import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart'
+    show TableVicinity;
 
 sealed class CalendarGridEvent {}
 
@@ -10,7 +12,12 @@ class CalendarGridLoadMonth extends CalendarGridEvent {
 
 class CalendarGridUpdateCell extends CalendarGridEvent {
   final DateTime? month;
-  final Employee? employee;
+  final Attendance attendance;
+  final TableVicinity cell;
 
-  CalendarGridUpdateCell({this.month, this.employee});
+  CalendarGridUpdateCell({
+    this.month,
+    required this.attendance,
+    required this.cell,
+  });
 }

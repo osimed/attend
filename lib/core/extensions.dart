@@ -1,3 +1,5 @@
+import 'package:flutter/material.dart';
+
 extension FormatMonth on DateTime {
   String formatMonth() {
     return "${month.toString().padLeft(2, '0')} - $year";
@@ -22,5 +24,13 @@ extension HoursParser on String {
     if (m < 0 || m > 60) return null;
     final dur = Duration(hours: h, minutes: m);
     return value.isNegative ? -dur : dur;
+  }
+}
+
+extension TimeFormat on TimeOfDay {
+  String displayTime() {
+    final h = hour.toString().padLeft(2, '0');
+    final m = minute.toString().padLeft(2, '0');
+    return '$h:$m';
   }
 }
