@@ -140,7 +140,7 @@ class _EditEmployeeState extends State<EditEmployee> {
                         onPressed: () {
                           if (formKey.currentState!.validate()) {
                             context.read<HeaderPanelBloc>().add(
-                              ConfirmSaveEmployee(
+                              SaveEmployee(
                                 Employee(
                                   id: currentEmployeeId ?? -1,
                                   firstName: firstNameController.text,
@@ -168,7 +168,7 @@ class _EditEmployeeState extends State<EditEmployee> {
                             ? null
                             : () {
                                 context.read<HeaderPanelBloc>().add(
-                                  ConfirmDeleteEmployee(widget.employee!),
+                                  DeleteEmployee(widget.employee!),
                                 );
                               },
                         style: FilledButton.styleFrom(

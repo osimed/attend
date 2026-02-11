@@ -16,16 +16,23 @@ class SelectEmployee extends HeaderPanelEvent {
   SelectEmployee({this.employee});
 }
 
-class ConfirmSaveEmployee extends HeaderPanelEvent {
+class SaveEmployee extends HeaderPanelEvent {
   final Employee employee;
 
-  ConfirmSaveEmployee(this.employee);
+  SaveEmployee(this.employee);
 }
 
-class ConfirmDeleteEmployee extends HeaderPanelEvent {
+class DeleteEmployee extends HeaderPanelEvent {
   final Employee employee;
 
-  ConfirmDeleteEmployee(this.employee);
+  DeleteEmployee(this.employee);
+}
+
+class SelectAttendance extends HeaderPanelEvent {
+  final TableVicinity cell;
+  final Attendance attendance;
+
+  SelectAttendance({required this.cell, required this.attendance});
 }
 
 class SaveAttendance extends HeaderPanelEvent {

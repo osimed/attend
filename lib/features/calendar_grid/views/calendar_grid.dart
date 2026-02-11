@@ -1,3 +1,4 @@
+import 'package:attend/core/extensions.dart';
 import 'package:attend/database/database.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_state.dart';
@@ -54,14 +55,13 @@ class CalendarGrid extends StatelessWidget {
                 child: _EmployeeNameCell(employee: entry.employee),
               );
             }
-            // TODO: the state needs to be full not partial
             return TableViewCell(
               child: BlocBuilder<CalendarGridBloc, CalendarGridState>(
                 buildWhen: (previous, current) {
                   if (current is CalendarCellRefreshed) {
                     return current.cell == vicinity;
                   }
-                  return false;
+                  return current is MonthlyCalendarLoaded;
                 },
                 builder: (context, state) {
                   final entry = state.calendar[vicinity.row - 1];
@@ -80,25 +80,66 @@ class CalendarGrid extends StatelessWidget {
                       child: InkWell(
                         onTap: () {
                           context.read<HeaderPanelBloc>().add(
-                            SaveAttendance(
+                            SelectAttendance(
                               cell: vicinity,
                               attendance:
                                   attendance ??
                                   Attendance(
-                                    id: -1,
                                     employeeId: entry.employee.id,
                                     date: DateTime(
                                       state.month.year,
                                       state.month.month,
                                       vicinity.column,
                                     ),
-                                    status: .p,
+                                    status: .empty,
                                   ),
+                            ),
+                          );
+                        },
+                        onLongPress: () {
+                          context.read<HeaderPanelBloc>().add(
+                            SaveAttendance(
+                              cell: vicinity,
+                              attendance: Attendance(
+                                employeeId: entry.employee.id,
+                                date: DateTime(
+                                  state.month.year,
+                                  state.month.month,
+                                  vicinity.column,
+                                ),
+                                status: .empty,
+                              ),
                             ),
                           );
                         },
                         child: switch (attendance?.status) {
                           null || .empty => const SizedBox.shrink(),
+                          .p => Center(
+                            child: Column(
+                              mainAxisAlignment: .center,
+                              crossAxisAlignment: .center,
+                              children: [
+                                Text(
+                                  attendance!.enter?.displayTime() ?? '--:--',
+                                  style: const TextStyle(
+                                    fontWeight: .w700,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                                const SizedBox(
+                                  width: 40,
+                                  child: Divider(height: 8),
+                                ),
+                                Text(
+                                  attendance.leave?.displayTime() ?? '--:--',
+                                  style: const TextStyle(
+                                    fontWeight: .w700,
+                                    letterSpacing: 1,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
                           _ => Center(
                             child: Text(
                               attendance!.status.name.toUpperCase(),

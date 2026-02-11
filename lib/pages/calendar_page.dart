@@ -20,7 +20,7 @@ class CalendarPage extends StatelessWidget {
         if (state is EmployeeDeleted || state is EmployeeSaved) {
           context.read<CalendarGridBloc>().add(LoadMonthlyCalendar());
         }
-        if (state is EditingAttendance) {
+        if (state is AttendanceSaved) {
           context.read<CalendarGridBloc>().add(
             RefreshCalendarCell(attendance: state.attendance, cell: state.cell),
           );

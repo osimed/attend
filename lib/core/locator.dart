@@ -6,9 +6,15 @@ import 'package:get_it/get_it.dart';
 
 final locator = GetIt.instance;
 
-void setupLocator() {
+void registerLazySingletons() {
   locator.registerLazySingleton(() => AppDatabase());
-  locator.registerLazySingleton(() => AttendService(locator.get<AppDatabase>()));
-  locator.registerLazySingleton(() => CalendarGridBloc(locator.get<AttendService>()));
-  locator.registerLazySingleton(() => HeaderPanelBloc(locator.get<AttendService>()));
+  locator.registerLazySingleton(
+    () => AttendService(locator.get<AppDatabase>()),
+  );
+  locator.registerLazySingleton(
+    () => CalendarGridBloc(locator.get<AttendService>()),
+  );
+  locator.registerLazySingleton(
+    () => HeaderPanelBloc(locator.get<AttendService>()),
+  );
 }

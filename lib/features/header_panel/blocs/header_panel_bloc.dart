@@ -7,11 +7,12 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
   final AttendService _attendService;
 
   HeaderPanelBloc(this._attendService)
-      : super(PickingAMonth(month: DateTime.now())) {
+    : super(PickingAMonth(month: DateTime.now())) {
     on<SeekToMonth>(_onSeekToMonth);
     on<SelectEmployee>(_onSelectEmployee);
-    on<ConfirmSaveEmployee>(_onConfirmSaveEmployee);
-    on<ConfirmDeleteEmployee>(_onConfirmDeleteEmployee);
+    on<SaveEmployee>(_onSaveEmployee);
+    on<DeleteEmployee>(_onDeleteEmployee);
+    on<SelectAttendance>(_onSelectAttendance);
     on<SaveAttendance>(_onSaveAttendance);
   }
 
@@ -45,20 +46,49 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
     );
   }
 
-  Future<void> _onConfirmSaveEmployee(
-    ConfirmSaveEmployee event,
+  Future<void> _onSaveEmployee(
+    SaveEmployee event,
     Emitter<HeaderPanelState> emit,
   ) async {
     await _attendService.saveEmployee(event.employee);
-    emit(EmployeeSaved(month: state.month, isOpen: true, employee: event.employee));
+    emit(
+      EmployeeSaved(month: state.month, isOpen: true, employee: event.employee),
+    );
   }
 
-  Future<void> _onConfirmDeleteEmployee(
-    ConfirmDeleteEmployee event,
+  Future<void> _onDeleteEmployee(
+    DeleteEmployee event,
     Emitter<HeaderPanelState> emit,
   ) async {
     await _attendService.deleteEmployee(event.employee);
-    emit(EmployeeDeleted(month: state.month, isOpen: false, employee: event.employee));
+    emit(
+      EmployeeDeleted(
+        month: state.month,
+        isOpen: false,
+        employee: event.employee,
+      ),
+    );
+  }
+
+  Future<void> _onSelectAttendance(
+    SelectAttendance event,
+    Emitter<HeaderPanelState> emit,
+  ) async {
+    final isOpen = switch (state) {
+      EditingAttendance state =>
+        state.isOpen &&
+            state.attendance.date == event.attendance.date &&
+            state.attendance.employeeId == event.attendance.employeeId,
+      _ => false,
+    };
+    emit(
+      EditingAttendance(
+        isOpen: !isOpen,
+        month: state.month,
+        attendance: event.attendance,
+        cell: event.cell,
+      ),
+    );
   }
 
   Future<void> _onSaveAttendance(
@@ -67,8 +97,8 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
   ) async {
     await _attendService.saveAttendance(event.attendance);
     emit(
-      EditingAttendance(
-        isOpen: true,
+      AttendanceSaved(
+        isOpen: state.isOpen,
         month: state.month,
         attendance: event.attendance,
         cell: event.cell,

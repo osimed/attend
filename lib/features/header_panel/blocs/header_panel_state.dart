@@ -38,3 +38,12 @@ class EditingAttendance extends HeaderPanelState {
     required this.attendance,
   });
 }
+
+class AttendanceSaved extends EditingAttendance {
+  const AttendanceSaved({
+    required super.month,
+    super.isOpen,
+    required super.cell,
+    required super.attendance,
+  });
+}

@@ -48,9 +48,7 @@ class PointingView extends StatelessWidget {
                         status: .p,
                         enter: Value(enter),
                       );
-                      bloc.add(
-                        SaveAttendance(cell: cell, attendance: newAtt),
-                      );
+                      bloc.add(SaveAttendance(cell: cell, attendance: newAtt));
                     },
                     child: Text(
                       attendance.enter?.displayTime() ?? '--:--',
@@ -85,9 +83,7 @@ class PointingView extends StatelessWidget {
                         status: .p,
                         leave: Value(leave),
                       );
-                      bloc.add(
-                        SaveAttendance(cell: cell, attendance: newAtt),
-                      );
+                      bloc.add(SaveAttendance(cell: cell, attendance: newAtt));
                     },
                     child: Text(
                       attendance.leave?.displayTime() ?? '--:--',
@@ -117,7 +113,11 @@ class PointingView extends StatelessWidget {
                           context.read<HeaderPanelBloc>().add(
                             SaveAttendance(
                               cell: cell,
-                              attendance: attendance.copyWith(status: status),
+                              attendance: attendance.copyWith(
+                                status: status,
+                                enter: const Value(null),
+                                leave: const Value(null),
+                              ),
                             ),
                           );
                         },

@@ -14,8 +14,5 @@ class RefreshCalendarCell extends CalendarGridEvent {
   final TableVicinity cell;
   final Attendance attendance;
 
-  RefreshCalendarCell({
-    required this.cell,
-    required this.attendance,
-  });
+  RefreshCalendarCell({required this.cell, required this.attendance});
 }

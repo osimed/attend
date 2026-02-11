@@ -415,19 +415,6 @@ class $AttendanceTableTable extends AttendanceTable
   final GeneratedDatabase attachedDatabase;
   final String? _alias;
   $AttendanceTableTable(this.attachedDatabase, [this._alias]);
-  static const VerificationMeta _idMeta = const VerificationMeta('id');
-  @override
-  late final GeneratedColumn<int> id = GeneratedColumn<int>(
-    'id',
-    aliasedName,
-    false,
-    hasAutoIncrement: true,
-    type: DriftSqlType.int,
-    requiredDuringInsert: false,
-    defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'PRIMARY KEY AUTOINCREMENT',
-    ),
-  );
   static const VerificationMeta _employeeIdMeta = const VerificationMeta(
     'employeeId',
   );
@@ -439,7 +426,7 @@ class $AttendanceTableTable extends AttendanceTable
     type: DriftSqlType.int,
     requiredDuringInsert: true,
     defaultConstraints: GeneratedColumn.constraintIsAlways(
-      'REFERENCES employee_table (id)',
+      'REFERENCES employee_table (id) ON DELETE CASCADE',
     ),
   );
   static const VerificationMeta _dateMeta = const VerificationMeta('date');
@@ -480,7 +467,6 @@ class $AttendanceTableTable extends AttendanceTable
       ).withConverter<TimeOfDay?>($AttendanceTableTable.$converterleaven);
   @override
   List<GeneratedColumn> get $columns => [
-    id,
     employeeId,
     date,
     status,
@@ -499,9 +485,6 @@ class $AttendanceTableTable extends AttendanceTable
   }) {
     final context = VerificationContext();
     final data = instance.toColumns(true);
-    if (data.containsKey('id')) {
-      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
-    }
     if (data.containsKey('employee_id')) {
       context.handle(
         _employeeIdMeta,
@@ -522,15 +505,11 @@ class $AttendanceTableTable extends AttendanceTable
   }
 
   @override
-  Set<GeneratedColumn> get $primaryKey => {id};
+  Set<GeneratedColumn> get $primaryKey => {employeeId, date};
   @override
   Attendance map(Map<String, dynamic> data, {String? tablePrefix}) {
     final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
     return Attendance(
-      id: attachedDatabase.typeMapping.read(
-        DriftSqlType.int,
-        data['${effectivePrefix}id'],
-      )!,
       employeeId: attachedDatabase.typeMapping.read(
         DriftSqlType.int,
         data['${effectivePrefix}employee_id'],
@@ -578,14 +557,12 @@ class $AttendanceTableTable extends AttendanceTable
 }
 
 class Attendance extends DataClass implements Insertable<Attendance> {
-  final int id;
   final int employeeId;
   final DateTime date;
   final Status status;
   final TimeOfDay? enter;
   final TimeOfDay? leave;
   const Attendance({
-    required this.id,
     required this.employeeId,
     required this.date,
     required this.status,
@@ -595,7 +572,6 @@ class Attendance extends DataClass implements Insertable<Attendance> {
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    map['id'] = Variable<int>(id);
     map['employee_id'] = Variable<int>(employeeId);
     map['date'] = Variable<DateTime>(date);
     {
@@ -618,7 +594,6 @@ class Attendance extends DataClass implements Insertable<Attendance> {
 
   AttendanceTableCompanion toCompanion(bool nullToAbsent) {
     return AttendanceTableCompanion(
-      id: Value(id),
       employeeId: Value(employeeId),
       date: Value(date),
       status: Value(status),
@@ -637,7 +612,6 @@ class Attendance extends DataClass implements Insertable<Attendance> {
   }) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return Attendance(
-      id: serializer.fromJson<int>(json['id']),
       employeeId: serializer.fromJson<int>(json['employeeId']),
       date: serializer.fromJson<DateTime>(json['date']),
       status: $AttendanceTableTable.$converterstatus.fromJson(
@@ -651,7 +625,6 @@ class Attendance extends DataClass implements Insertable<Attendance> {
   Map<String, dynamic> toJson({ValueSerializer? serializer}) {
     serializer ??= driftRuntimeOptions.defaultSerializer;
     return <String, dynamic>{
-      'id': serializer.toJson<int>(id),
       'employeeId': serializer.toJson<int>(employeeId),
       'date': serializer.toJson<DateTime>(date),
       'status': serializer.toJson<String>(
@@ -663,14 +636,12 @@ class Attendance extends DataClass implements Insertable<Attendance> {
   }
 
   Attendance copyWith({
-    int? id,
     int? employeeId,
     DateTime? date,
     Status? status,
     Value<TimeOfDay?> enter = const Value.absent(),
     Value<TimeOfDay?> leave = const Value.absent(),
   }) => Attendance(
-    id: id ?? this.id,
     employeeId: employeeId ?? this.employeeId,
     date: date ?? this.date,
     status: status ?? this.status,
@@ -679,7 +650,6 @@ class Attendance extends DataClass implements Insertable<Attendance> {
   );
   Attendance copyWithCompanion(AttendanceTableCompanion data) {
     return Attendance(
-      id: data.id.present ? data.id.value : this.id,
       employeeId: data.employeeId.present
           ? data.employeeId.value
           : this.employeeId,
@@ -693,7 +663,6 @@ class Attendance extends DataClass implements Insertable<Attendance> {
   @override
   String toString() {
     return (StringBuffer('Attendance(')
-          ..write('id: $id, ')
           ..write('employeeId: $employeeId, ')
           ..write('date: $date, ')
           ..write('status: $status, ')
@@ -704,12 +673,11 @@ class Attendance extends DataClass implements Insertable<Attendance> {
   }
 
   @override
-  int get hashCode => Object.hash(id, employeeId, date, status, enter, leave);
+  int get hashCode => Object.hash(employeeId, date, status, enter, leave);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is Attendance &&
-          other.id == this.id &&
           other.employeeId == this.employeeId &&
           other.date == this.date &&
           other.status == this.status &&
@@ -718,72 +686,69 @@ class Attendance extends DataClass implements Insertable<Attendance> {
 }
 
 class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
-  final Value<int> id;
   final Value<int> employeeId;
   final Value<DateTime> date;
   final Value<Status> status;
   final Value<TimeOfDay?> enter;
   final Value<TimeOfDay?> leave;
+  final Value<int> rowid;
   const AttendanceTableCompanion({
-    this.id = const Value.absent(),
     this.employeeId = const Value.absent(),
     this.date = const Value.absent(),
     this.status = const Value.absent(),
     this.enter = const Value.absent(),
     this.leave = const Value.absent(),
+    this.rowid = const Value.absent(),
   });
   AttendanceTableCompanion.insert({
-    this.id = const Value.absent(),
     required int employeeId,
     required DateTime date,
     required Status status,
     this.enter = const Value.absent(),
     this.leave = const Value.absent(),
+    this.rowid = const Value.absent(),
   }) : employeeId = Value(employeeId),
        date = Value(date),
        status = Value(status);
   static Insertable<Attendance> custom({
-    Expression<int>? id,
     Expression<int>? employeeId,
     Expression<DateTime>? date,
     Expression<String>? status,
     Expression<int>? enter,
     Expression<int>? leave,
+    Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
-      if (id != null) 'id': id,
       if (employeeId != null) 'employee_id': employeeId,
       if (date != null) 'date': date,
       if (status != null) 'status': status,
       if (enter != null) 'enter': enter,
       if (leave != null) 'leave': leave,
+      if (rowid != null) 'rowid': rowid,
     });
   }
 
   AttendanceTableCompanion copyWith({
-    Value<int>? id,
     Value<int>? employeeId,
     Value<DateTime>? date,
     Value<Status>? status,
     Value<TimeOfDay?>? enter,
     Value<TimeOfDay?>? leave,
+    Value<int>? rowid,
   }) {
     return AttendanceTableCompanion(
-      id: id ?? this.id,
       employeeId: employeeId ?? this.employeeId,
       date: date ?? this.date,
       status: status ?? this.status,
       enter: enter ?? this.enter,
       leave: leave ?? this.leave,
+      rowid: rowid ?? this.rowid,
     );
   }
 
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
     final map = <String, Expression>{};
-    if (id.present) {
-      map['id'] = Variable<int>(id.value);
-    }
     if (employeeId.present) {
       map['employee_id'] = Variable<int>(employeeId.value);
     }
@@ -805,18 +770,21 @@ class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
         $AttendanceTableTable.$converterleaven.toSql(leave.value),
       );
     }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
     return map;
   }
 
   @override
   String toString() {
     return (StringBuffer('AttendanceTableCompanion(')
-          ..write('id: $id, ')
           ..write('employeeId: $employeeId, ')
           ..write('date: $date, ')
           ..write('status: $status, ')
           ..write('enter: $enter, ')
-          ..write('leave: $leave')
+          ..write('leave: $leave, ')
+          ..write('rowid: $rowid')
           ..write(')'))
         .toString();
   }
@@ -847,6 +815,16 @@ abstract class _$AppDatabase extends GeneratedDatabase {
     dateIdx,
     employeeIdIdx,
   ];
+  @override
+  StreamQueryUpdateRules get streamUpdateRules => const StreamQueryUpdateRules([
+    WritePropagation(
+      on: TableUpdateQuery.onTableName(
+        'employee_table',
+        limitUpdateKind: UpdateKind.delete,
+      ),
+      result: [TableUpdate('attendance_table', kind: UpdateKind.delete)],
+    ),
+  ]);
 }
 
 typedef $$EmployeeTableTableCreateCompanionBuilder =
@@ -1178,21 +1156,21 @@ typedef $$EmployeeTableTableProcessedTableManager =
     >;
 typedef $$AttendanceTableTableCreateCompanionBuilder =
     AttendanceTableCompanion Function({
-      Value<int> id,
       required int employeeId,
       required DateTime date,
       required Status status,
       Value<TimeOfDay?> enter,
       Value<TimeOfDay?> leave,
+      Value<int> rowid,
     });
 typedef $$AttendanceTableTableUpdateCompanionBuilder =
     AttendanceTableCompanion Function({
-      Value<int> id,
       Value<int> employeeId,
       Value<DateTime> date,
       Value<Status> status,
       Value<TimeOfDay?> enter,
       Value<TimeOfDay?> leave,
+      Value<int> rowid,
     });
 
 final class $$AttendanceTableTableReferences
@@ -1235,11 +1213,6 @@ class $$AttendanceTableTableFilterComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnFilters<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnFilters(column),
-  );
-
   ColumnFilters<DateTime> get date => $composableBuilder(
     column: $table.date,
     builder: (column) => ColumnFilters(column),
@@ -1296,11 +1269,6 @@ class $$AttendanceTableTableOrderingComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  ColumnOrderings<int> get id => $composableBuilder(
-    column: $table.id,
-    builder: (column) => ColumnOrderings(column),
-  );
-
   ColumnOrderings<DateTime> get date => $composableBuilder(
     column: $table.date,
     builder: (column) => ColumnOrderings(column),
@@ -1354,9 +1322,6 @@ class $$AttendanceTableTableAnnotationComposer
     super.$addJoinBuilderToRootComposer,
     super.$removeJoinBuilderFromRootComposer,
   });
-  GeneratedColumn<int> get id =>
-      $composableBuilder(column: $table.id, builder: (column) => column);
-
   GeneratedColumn<DateTime> get date =>
       $composableBuilder(column: $table.date, builder: (column) => column);
 
@@ -1423,35 +1388,35 @@ class $$AttendanceTableTableTableManager
               $$AttendanceTableTableAnnotationComposer($db: db, $table: table),
           updateCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
                 Value<int> employeeId = const Value.absent(),
                 Value<DateTime> date = const Value.absent(),
                 Value<Status> status = const Value.absent(),
                 Value<TimeOfDay?> enter = const Value.absent(),
                 Value<TimeOfDay?> leave = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => AttendanceTableCompanion(
-                id: id,
                 employeeId: employeeId,
                 date: date,
                 status: status,
                 enter: enter,
                 leave: leave,
+                rowid: rowid,
               ),
           createCompanionCallback:
               ({
-                Value<int> id = const Value.absent(),
                 required int employeeId,
                 required DateTime date,
                 required Status status,
                 Value<TimeOfDay?> enter = const Value.absent(),
                 Value<TimeOfDay?> leave = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
               }) => AttendanceTableCompanion.insert(
-                id: id,
                 employeeId: employeeId,
                 date: date,
                 status: status,
                 enter: enter,
                 leave: leave,
+                rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
               .map(

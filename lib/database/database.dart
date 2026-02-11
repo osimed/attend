@@ -10,12 +10,15 @@ enum Status { empty, p, r, c, a, j, m, ac, dc }
 @TableIndex(name: 'employee_id_idx', columns: {#employeeId})
 @DataClassName('Attendance')
 class AttendanceTable extends Table {
-  IntColumn get id => integer().autoIncrement()();
-  IntColumn get employeeId => integer().references(EmployeeTable, #id)();
+  IntColumn get employeeId =>
+      integer().references(EmployeeTable, #id, onDelete: .cascade)();
   DateTimeColumn get date => dateTime()();
   TextColumn get status => textEnum<Status>()();
   IntColumn get enter => integer().map(const TimeOfDayConverter()).nullable()();
   IntColumn get leave => integer().map(const TimeOfDayConverter()).nullable()();
+
+  @override
+  Set<Column> get primaryKey => {employeeId, date};
 }
 
 enum Team { exp, rss }
@@ -66,6 +69,14 @@ class AppDatabase extends _$AppDatabase {
   @override
   int get schemaVersion => 1;
 
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+    onCreate: (m) => m.createAll(),
+    beforeOpen: (d) async {
+      await customStatement('PRAGMA foreign_keys = ON;');
+    },
+  );
+
   Future<List<CalendarRow>> loadCalendar(DateTime start, DateTime end) async {
     final query = select(employeeTable).join([
       leftOuterJoin(
@@ -92,21 +103,19 @@ class AppDatabase extends _$AppDatabase {
   }
 
   Future<void> saveAttendance(Attendance attendance) async {
-    attendanceTable.insertOne(
+    attendanceTable.insertOnConflictUpdate(
       AttendanceTableCompanion(
-        id: attendance.id != -1 ? Value(attendance.id) : const Value.absent(),
         employeeId: Value(attendance.employeeId),
         date: Value(attendance.date),
         status: Value(attendance.status),
         enter: Value(attendance.enter),
         leave: Value(attendance.leave),
       ),
-      mode: .insertOrReplace,
     );
   }
 
   Future<void> saveEmployee(Employee employee) async {
-    employeeTable.insertOne(
+    employeeTable.insertOnConflictUpdate(
       EmployeeTableCompanion(
         id: employee.id != -1 ? Value(employee.id) : const Value.absent(),
         firstName: Value(employee.firstName),
@@ -114,7 +123,6 @@ class AppDatabase extends _$AppDatabase {
         team: Value(employee.team),
         collected: Value(employee.collected),
       ),
-      mode: .insertOrReplace,
     );
   }
 
