@@ -17,8 +17,9 @@ class CalendarGridBloc extends Bloc<CalendarGridEvent, CalendarGridState> {
     Emitter<CalendarGridState> emit,
   ) async {
     final month = event.month ?? state.month;
-    final calendar = await _attendService.loadCalendar(month);
-    emit(MonthlyCalendarLoaded(month: month, calendar: calendar));
+    final team = event.team ?? state.team;
+    final calendar = await _attendService.loadCalendar(month, team);
+    emit(MonthlyCalendarLoaded(team: team, month: month, calendar: calendar));
   }
 
   Future<void> _onRefreshCalendarCell(
@@ -37,6 +38,7 @@ class CalendarGridBloc extends Bloc<CalendarGridEvent, CalendarGridState> {
     ];
     emit(
       CalendarCellRefreshed(
+        team: state.team,
         month: state.month,
         calendar: updatedCalendar,
         cell: event.cell,

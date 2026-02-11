@@ -6,11 +6,11 @@ class AttendService {
 
   AttendService(this._database);
 
-  Future<List<CalendarRow>> loadCalendar(DateTime month) async {
+  Future<List<CalendarRow>> loadCalendar(DateTime month, Team team) async {
     final days = DateUtils.getDaysInMonth(month.year, month.month);
     final start = DateTime(month.year, month.month);
     final end = DateTime(month.year, month.month, days);
-    return _database.loadCalendar(start, end);
+    return _database.loadCalendar(start, end, team);
   }
 
   Future<void> saveAttendance(Attendance attendance) async {

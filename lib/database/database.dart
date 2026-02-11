@@ -77,7 +77,11 @@ class AppDatabase extends _$AppDatabase {
     },
   );
 
-  Future<List<CalendarRow>> loadCalendar(DateTime start, DateTime end) async {
+  Future<List<CalendarRow>> loadCalendar(
+    DateTime start,
+    DateTime end,
+    Team team,
+  ) async {
     final query = select(employeeTable).join([
       leftOuterJoin(
         attendanceTable,
@@ -85,6 +89,7 @@ class AppDatabase extends _$AppDatabase {
             attendanceTable.date.isBetweenValues(start, end),
       ),
     ]);
+    query.where(employeeTable.team.equalsValue(team));
 
     final result = await query.get();
     final calendar = <int, CalendarRow>{};

@@ -6,8 +6,9 @@ sealed class CalendarGridEvent {}
 
 class LoadMonthlyCalendar extends CalendarGridEvent {
   final DateTime? month;
+  final Team? team;
 
-  LoadMonthlyCalendar({this.month});
+  LoadMonthlyCalendar({this.month, this.team});
 }
 
 class RefreshCalendarCell extends CalendarGridEvent {

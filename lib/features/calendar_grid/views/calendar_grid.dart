@@ -1,6 +1,7 @@
 import 'package:attend/core/extensions.dart';
 import 'package:attend/database/database.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
+import 'package:attend/features/calendar_grid/blocs/calendar_grid_event.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_state.dart';
 import 'package:attend/features/calendar_grid/views/calendar_day.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
@@ -42,7 +43,23 @@ class CalendarGrid extends StatelessWidget {
           columnBuilder: (index) => _buildTableSpan(context, index, false),
           cellBuilder: (context, vicinity) {
             if (vicinity.row == 0 && vicinity.column == 0) {
-              return const TableViewCell(child: SizedBox.shrink());
+              return TableViewCell(
+                child: Padding(
+                  padding: const EdgeInsets.all(8.0),
+                  child: DropdownButton<Team>(
+                    isExpanded: true,
+                    value: state.team,
+                    underline: const SizedBox.shrink(),
+                    items: [
+                      for (final t in Team.values)
+                        DropdownMenuItem(value: t, child: Text(t.name)),
+                    ],
+                    onChanged: (t) => BlocProvider.of<CalendarGridBloc>(
+                      context,
+                    ).add(LoadMonthlyCalendar(month: state.month, team: t)),
+                  ),
+                ),
+              );
             }
             if (vicinity.row == 0) {
               return TableViewCell(
@@ -61,7 +78,11 @@ class CalendarGrid extends StatelessWidget {
                   if (current is CalendarCellRefreshed) {
                     return current.cell == vicinity;
                   }
-                  return current is MonthlyCalendarLoaded;
+                  if (current is MonthlyCalendarLoaded) {
+                    final len = current.calendar.length;
+                    return vicinity.row - 1 < len;
+                  }
+                  return false;
                 },
                 builder: (context, state) {
                   final entry = state.calendar[vicinity.row - 1];
