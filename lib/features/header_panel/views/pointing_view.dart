@@ -17,150 +17,186 @@ class PointingView extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
-      child: Column(
-        children: [
-          Container(
-            color: attendance.status == .p
-                ? Theme.of(context).colorScheme.secondaryContainer
-                : null,
-            child: Row(
-              children: [
-                Expanded(
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      minimumSize: const Size(80, 80),
-                      foregroundColor: attendance.status == .p
-                          ? Theme.of(context).colorScheme.onSecondaryContainer
-                          : null,
-                    ),
-                    onPressed: () async {
-                      final bloc = context.read<HeaderPanelBloc>();
-                      final enter = await showTimePicker(
-                        context: context,
-                        initialTime:
-                            attendance.enter ??
-                            const TimeOfDay(hour: 08, minute: 00),
-                      );
-                      if (enter == null) return;
-
-                      final newAtt = attendance.copyWith(
-                        status: .p,
-                        enter: Value(enter),
-                      );
-                      bloc.add(SaveAttendance(cell: cell, attendance: newAtt));
-                    },
-                    child: Text(
-                      attendance.enter?.displayTime() ?? '--:--',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: .w700,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ),
-                const SizedBox(width: 1),
-                Expanded(
-                  child: TextButton(
-                    style: TextButton.styleFrom(
-                      minimumSize: const Size(80, 80),
-                      foregroundColor: attendance.status == .p
-                          ? Theme.of(context).colorScheme.onSecondaryContainer
-                          : null,
-                    ),
-                    onPressed: () async {
-                      final bloc = context.read<HeaderPanelBloc>();
-                      final leave = await showTimePicker(
-                        context: context,
-                        initialTime:
-                            attendance.leave ??
-                            const TimeOfDay(hour: 17, minute: 00),
-                      );
-                      if (leave == null) return;
-
-                      final newAtt = attendance.copyWith(
-                        status: .p,
-                        leave: Value(leave),
-                      );
-                      bloc.add(SaveAttendance(cell: cell, attendance: newAtt));
-                    },
-                    child: Text(
-                      attendance.leave?.displayTime() ?? '--:--',
-                      style: const TextStyle(
-                        fontSize: 18,
-                        fontWeight: .w700,
-                        letterSpacing: 1,
-                      ),
-                    ),
-                  ),
-                ),
-              ],
-            ),
-          ),
-          const Divider(height: 0),
-          SizedBox(
-            height: 80,
-            child: Padding(
-              padding: const EdgeInsets.all(6.0),
-              child: ListView(
-                scrollDirection: .horizontal,
+      padding: const EdgeInsets.all(4.0),
+      child: LayoutBuilder(
+        builder: (context, boxC) {
+          if (boxC.maxWidth > 700) {
+            return SizedBox(
+              height: 70,
+              child: Row(
+                mainAxisAlignment: .center,
                 children: [
-                  for (final status in Status.values)
-                    if (status != .empty && status != .p)
-                      TextButton(
-                        onPressed: () {
-                          context.read<HeaderPanelBloc>().add(
-                            SaveAttendance(
-                              cell: cell,
-                              attendance: attendance.copyWith(
-                                status: status,
-                                enter: const Value(null),
-                                leave: const Value(null),
-                              ),
-                            ),
-                          );
-                        },
-                        style: TextButton.styleFrom(
-                          backgroundColor: status == attendance.status
-                              ? Theme.of(context).colorScheme.secondaryContainer
-                              : null,
-                          foregroundColor: status == attendance.status
-                              ? Theme.of(
-                                  context,
-                                ).colorScheme.onSecondaryContainer
-                              : null,
-                        ),
-                        child: Text(
-                          status.name.toUpperCase(),
-                          style: const TextStyle(
-                            fontSize: 18,
-                            fontWeight: .w700,
-                            letterSpacing: 1,
-                          ),
-                        ),
-                      ),
+                  SizedBox(width: 240, child: buildTimeSelector(context)),
+                  Flexible(child: buildStatusSelector(context)),
+                  buildEmployeeLayoffButton(context),
                 ],
               ),
+            );
+          }
+          return SizedBox(
+            height: 140,
+            child: Column(
+              children: [
+                SizedBox(
+                  height: 70,
+                  child: Row(
+                    children: [
+                      Flexible(child: buildTimeSelector(context)),
+                      buildEmployeeLayoffButton(context),
+                    ],
+                  ),
+                ),
+                Flexible(child: buildStatusSelector(context)),
+              ],
             ),
+          );
+        },
+      ),
+    );
+  }
+
+  Widget buildTimeSelector(BuildContext context) {
+    return Card(
+      child: Row(
+        children: [
+          Expanded(child: buildPickEnterTime(context)),
+          const SizedBox(height: 40, child: VerticalDivider(width: 1)),
+          Expanded(child: buildPickLeaveTime(context)),
+        ],
+      ),
+    );
+  }
+
+  TextButton buildPickEnterTime(BuildContext context) {
+    return TextButton(
+      style: TextButton.styleFrom(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topLeft: Radius.circular(12),
+            bottomLeft: Radius.circular(12),
           ),
-          const Divider(height: 0),
-          Expanded(
-            child: FilledButton(
-              onPressed: () {},
-              style: FilledButton.styleFrom(
-                backgroundColor: Theme.of(context).colorScheme.tertiary,
-                shape: const RoundedRectangleBorder(),
-              ),
-              child: const Center(
+        ),
+        minimumSize: Size.infinite,
+      ),
+      onPressed: () async {
+        final bloc = context.read<HeaderPanelBloc>();
+        final fallbackEnter = const TimeOfDay(hour: 08, minute: 00);
+        final enter = await showTimePicker(
+          context: context,
+          initialTime: attendance.enter ?? fallbackEnter,
+        );
+        if (enter == null) return;
+
+        final newAtt = attendance.copyWith(status: .p, enter: Value(enter));
+        bloc.add(SaveAttendance(cell: cell, attendance: newAtt));
+      },
+      child: Text(
+        attendance.enter?.displayTime() ?? '--:--',
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: .w700,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+
+  TextButton buildPickLeaveTime(BuildContext context) {
+    return TextButton(
+      style: TextButton.styleFrom(
+        shape: const RoundedRectangleBorder(
+          borderRadius: BorderRadius.only(
+            topRight: Radius.circular(12),
+            bottomRight: Radius.circular(12),
+          ),
+        ),
+        minimumSize: Size.infinite,
+      ),
+      onPressed: () async {
+        final bloc = context.read<HeaderPanelBloc>();
+        final fallbackLeave = const TimeOfDay(hour: 17, minute: 00);
+        final leave = await showTimePicker(
+          context: context,
+          initialTime: attendance.leave ?? fallbackLeave,
+        );
+        if (leave == null) return;
+
+        final newAtt = attendance.copyWith(status: .p, leave: Value(leave));
+        bloc.add(SaveAttendance(cell: cell, attendance: newAtt));
+      },
+      child: Text(
+        attendance.leave?.displayTime() ?? '--:--',
+        style: const TextStyle(
+          fontSize: 18,
+          fontWeight: .w700,
+          letterSpacing: 1,
+        ),
+      ),
+    );
+  }
+
+  Widget buildStatusSelector(BuildContext context) {
+    return Card(
+      child: ListView(
+        scrollDirection: .horizontal,
+        children: [
+          for (final status in Status.values)
+            if (status != .empty && status != .p)
+              TextButton(
+                onPressed: () {
+                  context.read<HeaderPanelBloc>().add(
+                    SaveAttendance(
+                      cell: cell,
+                      attendance: attendance.copyWith(
+                        status: status,
+                        enter: const Value(null),
+                        leave: const Value(null),
+                      ),
+                    ),
+                  );
+                },
+                style: TextButton.styleFrom(
+                  shape: RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  backgroundColor: status == attendance.status
+                      ? Theme.of(context).colorScheme.tertiaryContainer
+                      : null,
+                  foregroundColor: status == attendance.status
+                      ? Theme.of(context).colorScheme.onTertiaryContainer
+                      : null,
+                ),
                 child: Text(
-                  'DIMISSION',
-                  style: TextStyle(fontSize: 18, fontWeight: .w800),
+                  status.name.toUpperCase(),
+                  style: const TextStyle(
+                    fontSize: 18,
+                    fontWeight: .w700,
+                    letterSpacing: 1,
+                  ),
                 ),
               ),
-            ),
-          ),
         ],
+      ),
+    );
+  }
+
+  Widget buildEmployeeLayoffButton(BuildContext context) {
+    return Padding(
+      padding: const EdgeInsets.all(4.0),
+      child: FilledButton(
+        onPressed: () {},
+        style: FilledButton.styleFrom(
+          backgroundColor: Theme.of(context).colorScheme.tertiary,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(12),
+          ),
+        ),
+        child: const Center(
+          child: Text(
+            'DIMISSION',
+            style: TextStyle(fontSize: 18, fontWeight: .w800),
+          ),
+        ),
       ),
     );
   }

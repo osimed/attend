@@ -46,145 +46,179 @@ class _EditEmployeeState extends State<EditEmployee> {
         key: formKey,
         child: Padding(
           padding: const EdgeInsets.all(8.0),
-          child: Column(
-            mainAxisSize: .min,
-            children: [
-              TextFormField(
-                controller: firstNameController,
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Ce champ est obligatoire';
-                  }
-                  return null;
-                },
-                decoration: const InputDecoration(
-                  labelText: "prénom",
-                  filled: true,
-                ),
-              ),
-              const SizedBox(height: 10),
-              TextFormField(
-                controller: lastNameController,
-                validator: (value) {
-                  if (value?.isEmpty ?? true) {
-                    return 'Ce champ est obligatoire';
-                  }
-                  return null;
-                },
-                decoration: const InputDecoration(
-                  labelText: "nom",
-                  filled: true,
-                ),
-              ),
-              const SizedBox(height: 10),
-              Row(
-                crossAxisAlignment: .start,
-                mainAxisSize: .max,
-                children: [
-                  Expanded(
-                    child:
-                        BlocSelector<HeaderPanelBloc, HeaderPanelState, Team>(
-                          selector: (state) {
-                            return state is EditingEmployee
-                                ? state.employee?.team ?? .exp
-                                : .exp;
-                          },
-                          builder: (context, stateTeam) {
-                            return DropdownButtonFormField<Team>(
-                              initialValue: stateTeam,
-                              decoration: const InputDecoration(
-                                labelText: "équipe",
-                                filled: true,
-                              ),
-                              items: [
-                                for (final t in Team.values)
-                                  DropdownMenuItem(
-                                    value: t,
-                                    child: Text(t.name),
-                                  ),
-                              ],
-                              onChanged: (t) => team = t ?? team,
-                            );
-                          },
-                        ),
-                  ),
-                  const SizedBox(width: 10),
-                  Expanded(
-                    child: TextFormField(
-                      controller: collectedController,
-                      keyboardType: .number,
-                      validator: (value) {
-                        if (value?.isEmpty ?? true) {
-                          return 'Ce champ est obligatoire';
-                        }
-                        if (value!.parseTime() == null) {
-                          return 'format requis heure,minutes';
-                        }
-                        return null;
-                      },
-                      decoration: const InputDecoration(
-                        labelText: "épargne",
-                        filled: true,
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 10),
-              SizedBox(
-                height: 60,
-                child: Row(
+          child: LayoutBuilder(
+            builder: (context, boxC) {
+              if (boxC.maxWidth > 700) {
+                return Column(
                   children: [
-                    Expanded(
-                      child: FilledButton.icon(
-                        onPressed: () {
-                          if (formKey.currentState!.validate()) {
-                            context.read<HeaderPanelBloc>().add(
-                              SaveEmployee(
-                                Employee(
-                                  id: currentEmployeeId ?? -1,
-                                  firstName: firstNameController.text,
-                                  lastName: lastNameController.text,
-                                  team: team,
-                                  collected:
-                                      collectedController.text.parseTime() ??
-                                      .zero,
-                                ),
-                              ),
-                            );
-                          }
-                        },
-                        style: FilledButton.styleFrom(
-                          minimumSize: Size.infinite,
-                        ),
-                        icon: const Icon(Icons.save),
-                        label: const Text("Sauvegarder"),
+                    SizedBox(
+                      height: 56,
+                      child: Row(
+                        mainAxisAlignment: .center,
+                        children: [
+                          Flexible(child: buildFirstNameField()),
+                          const SizedBox(width: 10),
+                          Flexible(child: buildLastNameField()),
+                          const SizedBox(width: 10),
+                          Expanded(child: buildSaveEmployeeButton(context)),
+                        ],
                       ),
                     ),
-                    const SizedBox(width: 10),
-                    Expanded(
-                      child: FilledButton.tonalIcon(
-                        onPressed: widget.employee == null
-                            ? null
-                            : () {
-                                context.read<HeaderPanelBloc>().add(
-                                  DeleteEmployee(widget.employee!),
-                                );
-                              },
-                        style: FilledButton.styleFrom(
-                          minimumSize: Size.infinite,
-                        ),
-                        icon: const Icon(Icons.delete),
-                        label: const Text("Supprimer"),
+                    const SizedBox(height: 10),
+                    SizedBox(
+                      height: 56,
+                      child: Row(
+                        children: [
+                          Flexible(child: buildTeamSelector()),
+                          const SizedBox(width: 10),
+                          Flexible(child: buildCollectedTimeField()),
+                          const SizedBox(width: 10),
+                          Expanded(child: buildDeleteEmployeeButton(context)),
+                        ],
                       ),
                     ),
                   ],
-                ),
-              ),
-            ],
+                );
+              }
+              return Column(
+                mainAxisSize: .min,
+                children: [
+                  buildFirstNameField(),
+                  const SizedBox(height: 10),
+                  buildLastNameField(),
+                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: .start,
+                    mainAxisSize: .max,
+                    children: [
+                      Expanded(child: buildTeamSelector()),
+                      const SizedBox(width: 10),
+                      Expanded(child: buildCollectedTimeField()),
+                    ],
+                  ),
+                  const SizedBox(height: 10),
+                  SizedBox(
+                    height: 56,
+                    child: Row(
+                      children: [
+                        Expanded(child: buildSaveEmployeeButton(context)),
+                        const SizedBox(width: 10),
+                        Expanded(child: buildDeleteEmployeeButton(context)),
+                      ],
+                    ),
+                  ),
+                ],
+              );
+            },
           ),
         ),
       ),
+    );
+  }
+
+  FilledButton buildDeleteEmployeeButton(BuildContext context) {
+    return FilledButton.tonalIcon(
+      onPressed: widget.employee == null
+          ? null
+          : () {
+              context.read<HeaderPanelBloc>().add(
+                DeleteEmployee(widget.employee!),
+              );
+            },
+      style: FilledButton.styleFrom(
+        minimumSize: Size.infinite,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      icon: const Icon(Icons.delete),
+      label: const Text("Supprimer"),
+    );
+  }
+
+  FilledButton buildSaveEmployeeButton(BuildContext context) {
+    return FilledButton.icon(
+      onPressed: () {
+        if (formKey.currentState!.validate()) {
+          context.read<HeaderPanelBloc>().add(
+            SaveEmployee(
+              Employee(
+                id: currentEmployeeId ?? -1,
+                firstName: firstNameController.text,
+                lastName: lastNameController.text,
+                team: team,
+                collected: collectedController.text.parseTime() ?? .zero,
+              ),
+            ),
+          );
+        }
+      },
+      style: FilledButton.styleFrom(
+        minimumSize: Size.infinite,
+        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+      ),
+      icon: const Icon(Icons.save),
+      label: const Text("Sauvegarder"),
+    );
+  }
+
+  TextFormField buildCollectedTimeField() {
+    return TextFormField(
+      controller: collectedController,
+      keyboardType: .number,
+      validator: (value) {
+        if (value?.isEmpty ?? true) {
+          return 'Ce champ est obligatoire';
+        }
+        if (value!.parseTime() == null) {
+          return 'format requis heure,minutes';
+        }
+        return null;
+      },
+      decoration: const InputDecoration(labelText: "épargne", filled: true),
+    );
+  }
+
+  Widget buildTeamSelector() {
+    return BlocSelector<HeaderPanelBloc, HeaderPanelState, Team>(
+      selector: (state) {
+        return state is EditingEmployee ? state.employee?.team ?? .exp : .exp;
+      },
+      builder: (context, stateTeam) {
+        return DropdownButtonFormField<Team>(
+          initialValue: stateTeam,
+          decoration: const InputDecoration(labelText: "équipe", filled: true),
+          items: [
+            for (final t in Team.values)
+              DropdownMenuItem(value: t, child: Text(t.name)),
+          ],
+          onChanged: (t) => team = t ?? team,
+        );
+      },
+    );
+  }
+
+  TextFormField buildLastNameField() {
+    return TextFormField(
+      controller: lastNameController,
+      validator: (value) {
+        if (value?.isEmpty ?? true) {
+          return 'Ce champ est obligatoire';
+        }
+        return null;
+      },
+      decoration: const InputDecoration(labelText: "nom", filled: true),
+    );
+  }
+
+  TextFormField buildFirstNameField() {
+    return TextFormField(
+      controller: firstNameController,
+      validator: (value) {
+        if (value?.isEmpty ?? true) {
+          return 'Ce champ est obligatoire';
+        }
+        return null;
+      },
+      decoration: const InputDecoration(labelText: "prénom", filled: true),
     );
   }
 

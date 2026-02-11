@@ -18,7 +18,7 @@ class DateTimeList extends StatelessWidget {
   Widget build(BuildContext context) {
     return ListView.builder(
       itemExtent: _chipWidth + _chipMargin,
-      padding: const EdgeInsets.only(top: 5, bottom: 3),
+      padding: const EdgeInsets.all(8),
       controller: ScrollController(initialScrollOffset: dateToOffset(month)),
       scrollDirection: .horizontal,
       itemBuilder: (context, index) {

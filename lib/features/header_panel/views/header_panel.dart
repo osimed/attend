@@ -19,7 +19,7 @@ class HeaderPanel extends StatelessWidget {
           return switch (state) {
             PickingAMonth state => SizedBox(
               width: double.infinity,
-              height: state.isOpen ? 50 : 0,
+              height: state.isOpen ? 65 : 0,
               child: DateTimeList(month: state.month),
             ),
             EditingEmployee state => SizedBox(
@@ -29,7 +29,7 @@ class HeaderPanel extends StatelessWidget {
             ),
             EditingAttendance state => SizedBox(
               width: double.infinity,
-              height: state.isOpen ? 240 : 0,
+              height: state.isOpen ? null : 0,
               child: PointingView(
                 cell: state.cell,
                 attendance: state.attendance,
