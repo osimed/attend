@@ -57,10 +57,38 @@ class PointingView extends StatelessWidget {
 
   Widget buildTimeSelector(BuildContext context) {
     return Card(
+      elevation: 0,
       child: Row(
         children: [
           Expanded(child: buildPickEnterTime(context)),
-          const SizedBox(height: 40, child: VerticalDivider(width: 1)),
+          FilledButton(
+            onPressed: () {
+              final bloc = context.read<HeaderPanelBloc>();
+              final newAtt = attendance.copyWith(
+                status: .p,
+                lunchBreak: !attendance.lunchBreak,
+              );
+              bloc.add(SaveAttendance(cell: cell, attendance: newAtt));
+            },
+            style: FilledButton.styleFrom(
+              padding: .zero,
+              foregroundColor: attendance.lunchBreak
+                  ? Colors.black
+                  : Colors.grey.shade300,
+              backgroundColor: attendance.lunchBreak
+                  ? Colors.amber.shade500
+                  : Colors.grey.shade600,
+              minimumSize: const Size(38, 38),
+              shape: const RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(12)),
+              ),
+              elevation: 0,
+            ),
+            child: const Text(
+              '1h',
+              style: TextStyle(fontWeight: .w700, fontSize: 15),
+            ),
+          ),
           Expanded(child: buildPickLeaveTime(context)),
         ],
       ),
@@ -137,6 +165,7 @@ class PointingView extends StatelessWidget {
 
   Widget buildStatusSelector(BuildContext context) {
     return Card(
+      elevation: 0,
       child: ListView(
         scrollDirection: .horizontal,
         children: [
@@ -151,6 +180,7 @@ class PointingView extends StatelessWidget {
                         status: status,
                         enter: const Value(null),
                         leave: const Value(null),
+                        lunchBreak: true,
                       ),
                     ),
                   );

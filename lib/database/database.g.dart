@@ -465,6 +465,21 @@ class $AttendanceTableTable extends AttendanceTable
         type: DriftSqlType.int,
         requiredDuringInsert: false,
       ).withConverter<TimeOfDay?>($AttendanceTableTable.$converterleaven);
+  static const VerificationMeta _lunchBreakMeta = const VerificationMeta(
+    'lunchBreak',
+  );
+  @override
+  late final GeneratedColumn<bool> lunchBreak = GeneratedColumn<bool>(
+    'lunch_break',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: false,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("lunch_break" IN (0, 1))',
+    ),
+    defaultValue: const Constant(true),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     employeeId,
@@ -472,6 +487,7 @@ class $AttendanceTableTable extends AttendanceTable
     status,
     enter,
     leave,
+    lunchBreak,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -500,6 +516,12 @@ class $AttendanceTableTable extends AttendanceTable
       );
     } else if (isInserting) {
       context.missing(_dateMeta);
+    }
+    if (data.containsKey('lunch_break')) {
+      context.handle(
+        _lunchBreakMeta,
+        lunchBreak.isAcceptableOrUnknown(data['lunch_break']!, _lunchBreakMeta),
+      );
     }
     return context;
   }
@@ -536,6 +558,10 @@ class $AttendanceTableTable extends AttendanceTable
           data['${effectivePrefix}leave'],
         ),
       ),
+      lunchBreak: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}lunch_break'],
+      )!,
     );
   }
 
@@ -562,12 +588,14 @@ class Attendance extends DataClass implements Insertable<Attendance> {
   final Status status;
   final TimeOfDay? enter;
   final TimeOfDay? leave;
+  final bool lunchBreak;
   const Attendance({
     required this.employeeId,
     required this.date,
     required this.status,
     this.enter,
     this.leave,
+    required this.lunchBreak,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -589,6 +617,7 @@ class Attendance extends DataClass implements Insertable<Attendance> {
         $AttendanceTableTable.$converterleaven.toSql(leave),
       );
     }
+    map['lunch_break'] = Variable<bool>(lunchBreak);
     return map;
   }
 
@@ -603,6 +632,7 @@ class Attendance extends DataClass implements Insertable<Attendance> {
       leave: leave == null && nullToAbsent
           ? const Value.absent()
           : Value(leave),
+      lunchBreak: Value(lunchBreak),
     );
   }
 
@@ -619,6 +649,7 @@ class Attendance extends DataClass implements Insertable<Attendance> {
       ),
       enter: serializer.fromJson<TimeOfDay?>(json['enter']),
       leave: serializer.fromJson<TimeOfDay?>(json['leave']),
+      lunchBreak: serializer.fromJson<bool>(json['lunchBreak']),
     );
   }
   @override
@@ -632,6 +663,7 @@ class Attendance extends DataClass implements Insertable<Attendance> {
       ),
       'enter': serializer.toJson<TimeOfDay?>(enter),
       'leave': serializer.toJson<TimeOfDay?>(leave),
+      'lunchBreak': serializer.toJson<bool>(lunchBreak),
     };
   }
 
@@ -641,12 +673,14 @@ class Attendance extends DataClass implements Insertable<Attendance> {
     Status? status,
     Value<TimeOfDay?> enter = const Value.absent(),
     Value<TimeOfDay?> leave = const Value.absent(),
+    bool? lunchBreak,
   }) => Attendance(
     employeeId: employeeId ?? this.employeeId,
     date: date ?? this.date,
     status: status ?? this.status,
     enter: enter.present ? enter.value : this.enter,
     leave: leave.present ? leave.value : this.leave,
+    lunchBreak: lunchBreak ?? this.lunchBreak,
   );
   Attendance copyWithCompanion(AttendanceTableCompanion data) {
     return Attendance(
@@ -657,6 +691,9 @@ class Attendance extends DataClass implements Insertable<Attendance> {
       status: data.status.present ? data.status.value : this.status,
       enter: data.enter.present ? data.enter.value : this.enter,
       leave: data.leave.present ? data.leave.value : this.leave,
+      lunchBreak: data.lunchBreak.present
+          ? data.lunchBreak.value
+          : this.lunchBreak,
     );
   }
 
@@ -667,13 +704,15 @@ class Attendance extends DataClass implements Insertable<Attendance> {
           ..write('date: $date, ')
           ..write('status: $status, ')
           ..write('enter: $enter, ')
-          ..write('leave: $leave')
+          ..write('leave: $leave, ')
+          ..write('lunchBreak: $lunchBreak')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(employeeId, date, status, enter, leave);
+  int get hashCode =>
+      Object.hash(employeeId, date, status, enter, leave, lunchBreak);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -682,7 +721,8 @@ class Attendance extends DataClass implements Insertable<Attendance> {
           other.date == this.date &&
           other.status == this.status &&
           other.enter == this.enter &&
-          other.leave == this.leave);
+          other.leave == this.leave &&
+          other.lunchBreak == this.lunchBreak);
 }
 
 class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
@@ -691,6 +731,7 @@ class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
   final Value<Status> status;
   final Value<TimeOfDay?> enter;
   final Value<TimeOfDay?> leave;
+  final Value<bool> lunchBreak;
   final Value<int> rowid;
   const AttendanceTableCompanion({
     this.employeeId = const Value.absent(),
@@ -698,6 +739,7 @@ class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
     this.status = const Value.absent(),
     this.enter = const Value.absent(),
     this.leave = const Value.absent(),
+    this.lunchBreak = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   AttendanceTableCompanion.insert({
@@ -706,6 +748,7 @@ class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
     required Status status,
     this.enter = const Value.absent(),
     this.leave = const Value.absent(),
+    this.lunchBreak = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : employeeId = Value(employeeId),
        date = Value(date),
@@ -716,6 +759,7 @@ class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
     Expression<String>? status,
     Expression<int>? enter,
     Expression<int>? leave,
+    Expression<bool>? lunchBreak,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -724,6 +768,7 @@ class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
       if (status != null) 'status': status,
       if (enter != null) 'enter': enter,
       if (leave != null) 'leave': leave,
+      if (lunchBreak != null) 'lunch_break': lunchBreak,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -734,6 +779,7 @@ class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
     Value<Status>? status,
     Value<TimeOfDay?>? enter,
     Value<TimeOfDay?>? leave,
+    Value<bool>? lunchBreak,
     Value<int>? rowid,
   }) {
     return AttendanceTableCompanion(
@@ -742,6 +788,7 @@ class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
       status: status ?? this.status,
       enter: enter ?? this.enter,
       leave: leave ?? this.leave,
+      lunchBreak: lunchBreak ?? this.lunchBreak,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -770,6 +817,9 @@ class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
         $AttendanceTableTable.$converterleaven.toSql(leave.value),
       );
     }
+    if (lunchBreak.present) {
+      map['lunch_break'] = Variable<bool>(lunchBreak.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -784,6 +834,7 @@ class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
           ..write('status: $status, ')
           ..write('enter: $enter, ')
           ..write('leave: $leave, ')
+          ..write('lunchBreak: $lunchBreak, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -1161,6 +1212,7 @@ typedef $$AttendanceTableTableCreateCompanionBuilder =
       required Status status,
       Value<TimeOfDay?> enter,
       Value<TimeOfDay?> leave,
+      Value<bool> lunchBreak,
       Value<int> rowid,
     });
 typedef $$AttendanceTableTableUpdateCompanionBuilder =
@@ -1170,6 +1222,7 @@ typedef $$AttendanceTableTableUpdateCompanionBuilder =
       Value<Status> status,
       Value<TimeOfDay?> enter,
       Value<TimeOfDay?> leave,
+      Value<bool> lunchBreak,
       Value<int> rowid,
     });
 
@@ -1236,6 +1289,11 @@ class $$AttendanceTableTableFilterComposer
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
 
+  ColumnFilters<bool> get lunchBreak => $composableBuilder(
+    column: $table.lunchBreak,
+    builder: (column) => ColumnFilters(column),
+  );
+
   $$EmployeeTableTableFilterComposer get employeeId {
     final $$EmployeeTableTableFilterComposer composer = $composerBuilder(
       composer: this,
@@ -1289,6 +1347,11 @@ class $$AttendanceTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<bool> get lunchBreak => $composableBuilder(
+    column: $table.lunchBreak,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   $$EmployeeTableTableOrderingComposer get employeeId {
     final $$EmployeeTableTableOrderingComposer composer = $composerBuilder(
       composer: this,
@@ -1333,6 +1396,11 @@ class $$AttendanceTableTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<TimeOfDay?, int> get leave =>
       $composableBuilder(column: $table.leave, builder: (column) => column);
+
+  GeneratedColumn<bool> get lunchBreak => $composableBuilder(
+    column: $table.lunchBreak,
+    builder: (column) => column,
+  );
 
   $$EmployeeTableTableAnnotationComposer get employeeId {
     final $$EmployeeTableTableAnnotationComposer composer = $composerBuilder(
@@ -1393,6 +1461,7 @@ class $$AttendanceTableTableTableManager
                 Value<Status> status = const Value.absent(),
                 Value<TimeOfDay?> enter = const Value.absent(),
                 Value<TimeOfDay?> leave = const Value.absent(),
+                Value<bool> lunchBreak = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AttendanceTableCompanion(
                 employeeId: employeeId,
@@ -1400,6 +1469,7 @@ class $$AttendanceTableTableTableManager
                 status: status,
                 enter: enter,
                 leave: leave,
+                lunchBreak: lunchBreak,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -1409,6 +1479,7 @@ class $$AttendanceTableTableTableManager
                 required Status status,
                 Value<TimeOfDay?> enter = const Value.absent(),
                 Value<TimeOfDay?> leave = const Value.absent(),
+                Value<bool> lunchBreak = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => AttendanceTableCompanion.insert(
                 employeeId: employeeId,
@@ -1416,6 +1487,7 @@ class $$AttendanceTableTableTableManager
                 status: status,
                 enter: enter,
                 leave: leave,
+                lunchBreak: lunchBreak,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0
