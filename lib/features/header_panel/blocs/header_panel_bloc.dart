@@ -8,12 +8,32 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
 
   HeaderPanelBloc(this._attendService)
     : super(PickingAMonth(month: DateTime.now())) {
+    on<CloseHeaderPanel>(_onCloseHeaderPanel);
     on<SeekToMonth>(_onSeekToMonth);
     on<SelectEmployee>(_onSelectEmployee);
     on<SaveEmployee>(_onSaveEmployee);
     on<DeleteEmployee>(_onDeleteEmployee);
     on<SelectAttendance>(_onSelectAttendance);
     on<SaveAttendance>(_onSaveAttendance);
+  }
+  Future<void> _onCloseHeaderPanel(
+    CloseHeaderPanel event,
+    Emitter<HeaderPanelState> emit,
+  ) async {
+    emit(switch (state) {
+      PickingAMonth s => PickingAMonth(isOpen: false, month: s.month),
+      EditingEmployee s => EditingEmployee(
+        isOpen: false,
+        month: s.month,
+        employee: s.employee,
+      ),
+      EditingAttendance s => EditingAttendance(
+        isOpen: false,
+        month: s.month,
+        cell: s.cell,
+        attendance: s.attendance,
+      ),
+    });
   }
 
   Future<void> _onSeekToMonth(
