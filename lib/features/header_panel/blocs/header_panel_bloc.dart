@@ -71,9 +71,7 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
     Emitter<HeaderPanelState> emit,
   ) async {
     await _attendService.saveEmployee(event.employee);
-    emit(
-      EmployeeSaved(month: state.month, isOpen: true, employee: event.employee),
-    );
+    emit(EmployeeSaved(month: state.month, isOpen: true, employee: null));
   }
 
   Future<void> _onDeleteEmployee(
