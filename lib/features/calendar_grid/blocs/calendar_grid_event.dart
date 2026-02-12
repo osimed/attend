@@ -17,3 +17,9 @@ class RefreshCalendarCell extends CalendarGridEvent {
 
   RefreshCalendarCell({required this.cell, required this.attendance});
 }
+
+class CalcAttendanceDiff extends CalendarGridEvent {
+  final TableVicinity cell;
+
+  CalcAttendanceDiff({required this.cell});
+}

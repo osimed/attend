@@ -37,3 +37,15 @@ class CalendarCellRefreshed extends CalendarGridState {
     required this.cell,
   });
 }
+
+class CalendarCellViewDiff extends CalendarCellRefreshed {
+  final Duration diff;
+
+  const CalendarCellViewDiff({
+    required super.team,
+    required super.month,
+    required super.calendar,
+    required super.cell,
+    required this.diff,
+  });
+}

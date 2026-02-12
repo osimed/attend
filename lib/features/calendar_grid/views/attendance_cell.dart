@@ -1,6 +1,7 @@
 import 'package:attend/core/extensions.dart';
 import 'package:attend/database/database.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
+import 'package:attend/features/calendar_grid/blocs/calendar_grid_event.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_state.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
@@ -38,6 +39,34 @@ class AttendanceCell extends StatelessWidget {
           state.month.month,
           vicinity.column,
         );
+        if (state is CalendarCellViewDiff && state.cell == vicinity) {
+          final entry = state.calendar[state.cell.row - 1];
+          final attendance =
+              entry.attendances[state.cell.column] ??
+              Attendance(
+                employeeId: entry.employee.id,
+                date: DateTime(
+                  state.month.year,
+                  state.month.month,
+                  vicinity.column,
+                ),
+                lunchBreak: true,
+                status: .empty,
+              );
+          return InkWell(
+            onTap: () {
+              context.read<HeaderPanelBloc>().add(
+                SelectAttendance(cell: state.cell, attendance: attendance),
+              );
+            },
+            onDoubleTap: () {
+              context.read<CalendarGridBloc>().add(
+                RefreshCalendarCell(cell: vicinity, attendance: attendance),
+              );
+            },
+            child: Center(child: Text(state.diff.formatTime())),
+          );
+        }
         if (attendance == null || attendance.status == .empty) {
           if (colDay.weekday == DateTime.sunday) {
             return InkWell(
@@ -101,6 +130,11 @@ class AttendanceCell extends StatelessWidget {
                           status: .empty,
                         ),
                   ),
+                );
+              },
+              onDoubleTap: () {
+                context.read<CalendarGridBloc>().add(
+                  CalcAttendanceDiff(cell: vicinity),
                 );
               },
               onLongPress: () {

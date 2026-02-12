@@ -8,7 +8,11 @@ extension FormatMonth on DateTime {
 
 extension FormatTime on Duration {
   String formatTime() {
-    return '${inMinutes ~/ 60},${inMinutes % 60}';
+    final total = inMinutes.abs();
+    final sign = isNegative ? '-' : '';
+    final h = (total ~/ 60).toString().padLeft(2, '0');
+    final m = (total % 60).toString().padLeft(2, '0');
+    return '$sign$h,$m';
   }
 }
 

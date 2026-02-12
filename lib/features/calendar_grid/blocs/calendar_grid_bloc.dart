@@ -10,6 +10,7 @@ class CalendarGridBloc extends Bloc<CalendarGridEvent, CalendarGridState> {
   CalendarGridBloc(this._attendService) : super(MonthlyCalendarLoaded.empty()) {
     on<LoadMonthlyCalendar>(_onLoadMonthlyCalendar);
     on<RefreshCalendarCell>(_onRefreshCalendarCell);
+    on<CalcAttendanceDiff>(_onCalcAttendanceDiff);
   }
 
   Future<void> _onLoadMonthlyCalendar(
@@ -42,6 +43,26 @@ class CalendarGridBloc extends Bloc<CalendarGridEvent, CalendarGridState> {
         month: state.month,
         calendar: updatedCalendar,
         cell: event.cell,
+      ),
+    );
+  }
+
+  Future<void> _onCalcAttendanceDiff(
+    CalcAttendanceDiff event,
+    Emitter<CalendarGridState> emit,
+  ) async {
+    state.calendar;
+    final entry = state.calendar[event.cell.row - 1];
+    final attendance = entry.attendances[event.cell.column];
+    final diff = _attendService.calcTimeDiff(attendance);
+    if (diff == null) return;
+    emit(
+      CalendarCellViewDiff(
+        team: state.team,
+        month: state.month,
+        calendar: state.calendar,
+        cell: event.cell,
+        diff: diff,
       ),
     );
   }
