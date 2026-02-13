@@ -95,7 +95,11 @@ class AppDatabase extends _$AppDatabase {
             attendanceTable.date.isBetweenValues(start, end),
       ),
     ]);
-    query.where(employeeTable.team.equalsValue(team));
+    query.where(
+      employeeTable.team.equalsValue(team) &
+          (employeeTable.leaveDate.isNull() |
+              employeeTable.leaveDate.isBiggerThanValue(start)),
+    );
 
     final result = await query.get();
     final calendar = <int, CalendarRow>{};
@@ -133,12 +137,19 @@ class AppDatabase extends _$AppDatabase {
         lastName: Value(employee.lastName),
         team: Value(employee.team),
         collected: Value(employee.collected),
+        leaveDate: Value(employee.leaveDate),
       ),
     );
   }
 
   Future<bool> deleteEmployee(Employee employee) async {
     return employeeTable.deleteOne(employee);
+  }
+
+  Future<void> layoffEmployee(int employeeId, DateTime? date) async {
+    final query = employeeTable.update()
+      ..where((empl) => empl.id.equals(employeeId));
+    await query.write(EmployeeTableCompanion(leaveDate: Value(date)));
   }
 
   static QueryExecutor _openConnection() {

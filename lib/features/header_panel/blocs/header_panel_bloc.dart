@@ -13,6 +13,7 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
     on<SelectEmployee>(_onSelectEmployee);
     on<SaveEmployee>(_onSaveEmployee);
     on<DeleteEmployee>(_onDeleteEmployee);
+    on<LayoffEmployee>(_onLayoffEmployee);
     on<SelectAttendance>(_onSelectAttendance);
     on<SaveAttendance>(_onSaveAttendance);
   }
@@ -86,6 +87,14 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
         employee: event.employee,
       ),
     );
+  }
+
+  Future<void> _onLayoffEmployee(
+    LayoffEmployee event,
+    Emitter<HeaderPanelState> emit,
+  ) async {
+    await _attendService.layoffEmployee(event.employeeId, event.left);
+    emit(EmployeeLaidOff(month: state.month, isOpen: false));
   }
 
   Future<void> _onSelectAttendance(

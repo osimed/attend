@@ -25,6 +25,10 @@ class AttendService {
     return _database.deleteEmployee(employee);
   }
 
+  Future<void> layoffEmployee(int employeeId, DateTime? date) async {
+    return _database.layoffEmployee(employeeId, date);
+  }
+
   Duration? calcTimeDiff(Attendance? attendance) {
     if (attendance == null) return null;
     final date = attendance.date;

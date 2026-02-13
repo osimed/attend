@@ -58,6 +58,28 @@ class CalendarGrid extends StatelessWidget {
                 child: _EmployeeNameCell(employee: entry.employee),
               );
             }
+            final lDate = entry.employee.leaveDate;
+            final isLeave =
+                lDate != null &&
+                lDate.year == state.month.year &&
+                lDate.month == state.month.month &&
+                lDate.day <= vicinity.column;
+            if (isLeave) {
+              return TableViewCell(
+                columnMergeStart: lDate.day,
+                columnMergeSpan: daysInMonth - lDate.day + 1,
+                child: GestureDetector(
+                  onLongPress: () {
+                    context.read<HeaderPanelBloc>().add(
+                      LayoffEmployee(employeeId: entry.employee.id, left: null),
+                    );
+                  },
+                  child: CustomPaint(
+                    painter: TextBannerPainter(text: 'DEMISSION'),
+                  ),
+                ),
+              );
+            }
             return TableViewCell(child: AttendanceCell(vicinity: vicinity));
           },
         );
@@ -131,5 +153,82 @@ class _EmployeeNameCell extends StatelessWidget {
         ),
       ),
     );
+  }
+}
+
+class TextBannerPainter extends CustomPainter {
+  final String text;
+
+  TextBannerPainter({super.repaint, required this.text});
+
+  @override
+  void paint(Canvas canvas, Size size) {
+    if (size.width <= _cellWidth * 2) {
+      final painter = TextPainter(
+        text: TextSpan(
+          text: text,
+          style: const TextStyle(fontSize: 11, fontWeight: .w800),
+        ),
+        textDirection: .ltr,
+      );
+      painter.layout();
+      final dx = size.width - painter.width;
+      painter.paint(canvas, Offset(dx / 2, 21));
+      return;
+    }
+
+    final painter = TextPainter(
+      text: TextSpan(
+        text: text,
+        style: const TextStyle(fontSize: 20, fontWeight: .w800),
+      ),
+      textDirection: .ltr,
+    );
+    painter.layout();
+
+    const padding = 80;
+    final stride = painter.width + padding;
+    final elements = size.width ~/ stride;
+    final leftover = size.width - stride * elements + padding;
+
+    if (leftover / 2 > padding) {
+      drawLines(canvas, [
+        leftover / 2 - 30,
+        leftover / 2 - 40,
+        leftover / 2 - 50,
+      ]);
+    }
+    for (int i = 0; i < elements; i++) {
+      final x = leftover / 2 + i * stride;
+      painter.paint(canvas, Offset(x, 16));
+
+      final lastElem = i == elements - 1;
+      if (leftover / 2 > padding || !lastElem) {
+        drawLines(canvas, [
+          x + painter.width + 30,
+          x + painter.width + 40,
+          x + painter.width + 50,
+        ]);
+      }
+    }
+  }
+
+  void drawLines(Canvas canvas, List<double> offsets) {
+    for (final offset in offsets) {
+      canvas.drawPath(
+        Path()
+          ..moveTo(offset, 10)
+          ..lineTo(offset - 5, 45)
+          ..lineTo(offset, 45)
+          ..lineTo(offset + 5, 10)
+          ..close(),
+        Paint()..color = Colors.amber,
+      );
+    }
+  }
+
+  @override
+  bool shouldRepaint(covariant CustomPainter _) {
+    return false;
   }
 }

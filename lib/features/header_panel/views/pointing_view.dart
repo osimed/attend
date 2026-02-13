@@ -214,7 +214,15 @@ class PointingView extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.all(4.0),
       child: FilledButton(
-        onPressed: () {},
+        onPressed: () {
+          final bloc = context.read<HeaderPanelBloc>();
+          bloc.add(
+            LayoffEmployee(
+              employeeId: attendance.employeeId,
+              left: attendance.date,
+            ),
+          );
+        },
         style: FilledButton.styleFrom(
           backgroundColor: Theme.of(context).colorScheme.tertiary,
           shape: RoundedRectangleBorder(
@@ -223,7 +231,7 @@ class PointingView extends StatelessWidget {
         ),
         child: const Center(
           child: Text(
-            'DIMISSION',
+            'DEMISSION',
             style: TextStyle(fontSize: 18, fontWeight: .w800),
           ),
         ),

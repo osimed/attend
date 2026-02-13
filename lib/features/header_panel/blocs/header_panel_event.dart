@@ -30,6 +30,13 @@ class DeleteEmployee extends HeaderPanelEvent {
   DeleteEmployee(this.employee);
 }
 
+class LayoffEmployee extends HeaderPanelEvent {
+  final int employeeId;
+  final DateTime? left;
+
+  LayoffEmployee({required this.employeeId, required this.left});
+}
+
 class SelectAttendance extends HeaderPanelEvent {
   final TableVicinity cell;
   final Attendance attendance;

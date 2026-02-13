@@ -27,6 +27,10 @@ class EmployeeDeleted extends EditingEmployee {
   const EmployeeDeleted({required super.month, super.isOpen, super.employee});
 }
 
+class EmployeeLaidOff extends EditingEmployee {
+  const EmployeeLaidOff({required super.month, super.isOpen, super.employee});
+}
+
 class EditingAttendance extends HeaderPanelState {
   final TableVicinity cell;
   final Attendance attendance;

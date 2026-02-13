@@ -17,7 +17,9 @@ class CalendarPage extends StatelessWidget {
   Widget build(BuildContext context) {
     return BlocListener<HeaderPanelBloc, HeaderPanelState>(
       listener: (context, state) {
-        if (state is EmployeeDeleted || state is EmployeeSaved) {
+        if (state is EmployeeDeleted ||
+            state is EmployeeSaved ||
+            state is EmployeeLaidOff) {
           context.read<CalendarGridBloc>().add(LoadMonthlyCalendar());
         }
         if (state is AttendanceSaved) {
