@@ -18,6 +18,7 @@ class CalendarGrid extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final textColor = Theme.of(context).colorScheme.onSurface;
     return BlocBuilder<CalendarGridBloc, CalendarGridState>(
       buildWhen: (previous, current) => current is MonthlyCalendarLoaded,
       builder: (context, state) {
@@ -75,7 +76,10 @@ class CalendarGrid extends StatelessWidget {
                     );
                   },
                   child: CustomPaint(
-                    painter: TextBannerPainter(text: 'DEMISSION'),
+                    painter: TextBannerPainter(
+                      text: 'DEMISSION',
+                      color: textColor,
+                    ),
                   ),
                 ),
               );
@@ -158,8 +162,9 @@ class _EmployeeNameCell extends StatelessWidget {
 
 class TextBannerPainter extends CustomPainter {
   final String text;
+  final Color color;
 
-  TextBannerPainter({super.repaint, required this.text});
+  TextBannerPainter({super.repaint, required this.text, required this.color});
 
   @override
   void paint(Canvas canvas, Size size) {
@@ -167,7 +172,7 @@ class TextBannerPainter extends CustomPainter {
       final painter = TextPainter(
         text: TextSpan(
           text: text,
-          style: const TextStyle(fontSize: 11, fontWeight: .w800),
+          style: TextStyle(fontSize: 11, fontWeight: .w800, color: color),
         ),
         textDirection: .ltr,
       );
@@ -180,7 +185,7 @@ class TextBannerPainter extends CustomPainter {
     final painter = TextPainter(
       text: TextSpan(
         text: text,
-        style: const TextStyle(fontSize: 20, fontWeight: .w800),
+        style: TextStyle(fontSize: 20, fontWeight: .w800, color: color),
       ),
       textDirection: .ltr,
     );
@@ -228,7 +233,10 @@ class TextBannerPainter extends CustomPainter {
   }
 
   @override
-  bool shouldRepaint(covariant CustomPainter _) {
-    return false;
+  bool shouldRepaint(covariant TextBannerPainter old) {
+    return old.color != color;
   }
+
+  @override
+  bool shouldRebuildSemantics(covariant CustomPainter _) => false;
 }
