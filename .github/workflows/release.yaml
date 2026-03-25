@@ -4,6 +4,9 @@ on:
     tags:
       - "v*.*.*"
 
+permissions:
+  contents: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
@@ -43,13 +46,13 @@ jobs:
           cd build/app/outputs/flutter-apk
           for file in app-*-release.apk; do
             abi=$(echo "$file"| sed -E 's/app-(.*)-release\.apk/\1/')
-            mv "$file" "attend_${{ steps.outputs.tag }}_$abi.apk"
+            mv "$file" "attend_${{ steps.tag.outputs.tag }}_$abi.apk"
           done
 
       - name: Create Release
         uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ steps.tag.outputs.tag }}
-          files: | build/app/outputs/flutter-apk/*.apk
+          files: build/app/outputs/flutter-apk/*.apk
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
