@@ -1,0 +1,55 @@
+name: App Release
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'zulu' 
+          java-version: '17'
+          cache: 'gradle'
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Flutter analyse 
+        run: flutter analyze
+
+      - name: Build APK
+        run: flutter build apk --release --split-per-abi
+
+      - name: Get Tag
+        id: tag
+        run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+
+      - name: Rename apk
+        run: |
+          cd build/app/outputs/flutter-apk
+          for file in app-*-release.apk; do
+            abi=$(echo "$file"| sed -E 's/app-(.*)-release\.apk/\1/')
+            mv "$file" "attend_${{ steps.outputs.tag }}_$abi.apk"
+          done
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ steps.tag.outputs.tag }}
+          files: | build/app/outputs/flutter-apk/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
