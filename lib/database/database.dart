@@ -98,7 +98,7 @@ class AppDatabase extends _$AppDatabase {
     query.where(
       employeeTable.team.equalsValue(team) &
           (employeeTable.leaveDate.isNull() |
-              employeeTable.leaveDate.isBiggerThanValue(start)),
+              employeeTable.leaveDate.isBiggerOrEqualValue(start)),
     );
 
     final result = await query.get();

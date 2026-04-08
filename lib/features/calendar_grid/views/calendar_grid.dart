@@ -1,3 +1,6 @@
+import 'dart:io';
+
+import 'package:attend/core/locator.dart';
 import 'package:attend/database/database.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_event.dart';
@@ -6,8 +9,11 @@ import 'package:attend/features/calendar_grid/views/attendance_cell.dart';
 import 'package:attend/features/calendar_grid/views/calendar_day.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
+import 'package:attend/services/export_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:open_file/open_file.dart';
+import 'package:path_provider/path_provider.dart';
 import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart';
 
 const _cellWidth = 65.0;
@@ -56,7 +62,7 @@ class CalendarGrid extends StatelessWidget {
             final entry = state.calendar[vicinity.row - 1];
             if (vicinity.column == 0) {
               return TableViewCell(
-                child: _EmployeeNameCell(employee: entry.employee),
+                child: _EmployeeNameCell(row: entry, month: state.month),
               );
             }
             final lDate = entry.employee.leaveDate;
@@ -129,15 +135,29 @@ class CalendarGrid extends StatelessWidget {
 }
 
 class _EmployeeNameCell extends StatelessWidget {
-  final Employee employee;
+  final CalendarRow row;
+  final DateTime month;
 
-  const _EmployeeNameCell({required this.employee});
+  const _EmployeeNameCell({required this.row, required this.month});
 
   @override
   Widget build(BuildContext context) {
     return InkWell(
+      onTap: () async {
+        final pdf = await locator.get<ExportService>().genEmployeePdf(
+          row,
+          month,
+        );
+        final dir = await getApplicationCacheDirectory();
+        final pdfPath =
+            '${dir.path}/${row.employee.firstName}-${row.employee.lastName}-${month.month}-${month.year}.pdf';
+        File(pdfPath).writeAsBytesSync(pdf);
+        OpenFile.open(pdfPath);
+      },
       onLongPress: () {
-        context.read<HeaderPanelBloc>().add(SelectEmployee(employee: employee));
+        context.read<HeaderPanelBloc>().add(
+          SelectEmployee(employee: row.employee),
+        );
       },
       child: Padding(
         padding: const EdgeInsets.all(6.0),
@@ -146,11 +166,11 @@ class _EmployeeNameCell extends StatelessWidget {
           crossAxisAlignment: .start,
           children: [
             Text(
-              employee.lastName.toUpperCase(),
+              row.employee.lastName.toUpperCase(),
               style: const TextStyle(fontSize: 15, fontWeight: .w800),
             ),
             Text(
-              employee.firstName.toUpperCase(),
+              row.employee.firstName.toUpperCase(),
               style: const TextStyle(fontSize: 13, fontWeight: .w300),
             ),
           ],

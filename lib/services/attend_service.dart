@@ -56,7 +56,10 @@ class AttendService {
     if (date.weekday == DateTime.saturday) {
       return worked - const Duration(hours: 4);
     }
-    return worked - const Duration(hours: 8);
+    if (date.weekday != DateTime.sunday) {
+      return worked - const Duration(hours: 8);
+    }
+    return worked;
   }
 }
 

@@ -60,10 +60,6 @@ class CalendarPage extends StatelessWidget {
                 context.read<HeaderPanelBloc>().add(SelectEmployee());
               },
             ),
-            IconButton(
-              icon: const Icon(CupertinoIcons.doc_text),
-              onPressed: () {},
-            ),
           ],
         ),
         body: Column(

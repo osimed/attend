@@ -62,7 +62,7 @@ class DateTimeList extends StatelessWidget {
   }
 }
 
-const _leastYear = 2000;
+const _leastYear = 2026;
 
 double dateToOffset(DateTime month) {
   final off = 12 * (month.year - _leastYear) + (month.month - 1);

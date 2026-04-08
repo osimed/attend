@@ -1,0 +1,344 @@
+import 'dart:typed_data';
+
+import 'package:attend/core/extensions.dart';
+import 'package:attend/database/database.dart';
+import 'package:attend/services/attend_service.dart';
+import 'package:flutter/material.dart' show DateUtils;
+import 'package:pdf/pdf.dart';
+import 'package:pdf/widgets.dart' as pw;
+
+Map<int, pw.TableColumnWidth> _columns() => {
+  0: const pw.FlexColumnWidth(0.06), // JOUR
+  1: const pw.FlexColumnWidth(0.13), // DÉBUT
+  2: const pw.FlexColumnWidth(0.13), // FIN
+  3: const pw.FlexColumnWidth(0.13), // SUPP
+  4: const pw.FlexColumnWidth(0.13), // REPOS
+  5: const pw.FlexColumnWidth(0.13), // RESTANT
+  6: const pw.FlexColumnWidth(0.14), // SIGNATURE
+  7: const pw.FlexColumnWidth(0.15), // EXPLICATION
+};
+
+final _headerStyle = pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold);
+
+final _cellStyle = const pw.TextStyle(fontSize: 8);
+
+final _boldCellStyle = pw.TextStyle(
+  fontSize: 8,
+  fontWeight: pw.FontWeight.bold,
+);
+
+final _totalStyle = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
+
+class ExportService {
+  final AttendService _attendService;
+
+  ExportService(this._attendService);
+
+  Future<Uint8List> genEmployeePdf(CalendarRow row, DateTime month) async {
+    final pdf = pw.Document();
+    final daysInMonth = DateUtils.getDaysInMonth(month.year, month.month);
+
+    final List<_DayData> days = [];
+
+    for (int day = 1; day <= daysInMonth; day++) {
+      final date = DateTime(month.year, month.month, day);
+      final attendance = row.attendances[day];
+      final diff = _attendService.calcTimeDiff(attendance);
+
+      days.add(
+        _DayData(
+          day: day,
+          date: date,
+          attendance: attendance,
+          diff: diff,
+          restant: null,
+        ),
+      );
+    }
+
+    Duration totalSupp = Duration.zero;
+    Duration totalRepos = Duration.zero;
+    for (final d in days) {
+      if (d.diff != null) {
+        if (!d.diff!.isNegative) {
+          totalSupp += d.diff!;
+        } else {
+          totalRepos += d.diff!;
+        }
+      }
+    }
+    final totalRestant = row.employee.collected + totalSupp + totalRepos;
+
+    pdf.addPage(
+      pw.Page(
+        pageFormat: PdfPageFormat.a4,
+        margin: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+        build: (pw.Context context) {
+          return pw.Column(
+            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+            children: [
+              pw.Text(
+                row.employee.collected.formatTime(),
+                style: pw.TextStyle(fontSize: 17, fontWeight: .bold),
+                textAlign: .center,
+              ),
+              pw.SizedBox(height: 6),
+              _buildPageHeader(row.employee, month),
+              pw.SizedBox(height: 6),
+
+              pw.Table(
+                border: pw.TableBorder.all(width: 0.5),
+                columnWidths: _columns(),
+                children: [
+                  _buildColumnHeaders(),
+                  ...days.map((d) => _buildDayRow(d)),
+                  _buildTotalRow(
+                    days.length,
+                    totalSupp,
+                    totalRepos,
+                    totalRestant,
+                  ),
+                ],
+              ),
+
+              pw.SizedBox(height: 16),
+              _buildSignatureRow(),
+            ],
+          );
+        },
+      ),
+    );
+
+    return pdf.save();
+  }
+
+  pw.Widget _buildPageHeader(Employee employee, DateTime month) {
+    final labelStyle = pw.TextStyle(
+      fontSize: 7,
+      fontWeight: pw.FontWeight.bold,
+    );
+    final valueStyle = pw.TextStyle(
+      fontSize: 9,
+      fontWeight: pw.FontWeight.bold,
+    );
+
+    pw.Widget field(String label, String value, {double flex = 1}) =>
+        pw.Expanded(
+          flex: (flex * 10).toInt(),
+          child: pw.Container(
+            padding: const pw.EdgeInsets.symmetric(horizontal: 6, vertical: 4),
+            decoration: pw.BoxDecoration(border: pw.Border.all(width: 0.5)),
+            child: pw.Column(
+              crossAxisAlignment: .start,
+              mainAxisAlignment: .center,
+              children: [
+                pw.Text(label, style: labelStyle),
+                pw.Text(value, style: valueStyle),
+              ],
+            ),
+          ),
+        );
+
+    return pw.SizedBox(
+      height: 30,
+      child: pw.Row(
+        children: [
+          field('SUP', employee.id.toString(), flex: 0.8),
+          field(
+            'NOM PRÉNOM',
+            '${employee.lastName.toUpperCase()} ${employee.firstName.toUpperCase()}',
+            flex: 2.2,
+          ),
+          field('POSTE', employee.team.name.toUpperCase(), flex: 0.7),
+          field('MOIS', month.month.toString().padLeft(2, '0'), flex: 0.6),
+          field('AN', month.year.toString(), flex: 0.6),
+        ],
+      ),
+    );
+  }
+
+  pw.TableRow _buildColumnHeaders() {
+    return pw.TableRow(
+      decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+      children: [
+        _headerCell('JOUR'),
+        _headerCell('DÉBUT DE\nTRAVAIL'),
+        _headerCell('FIN DE\nTRAVAIL'),
+        _headerCell('HEURES\nSUPP'),
+        _headerCell('HEURES\nREPOS'),
+        _headerCell('HEURES\nRESTANTS'),
+        _headerCell('SIGNATURE'),
+        _headerCell('EXPLICATION'),
+      ],
+    );
+  }
+
+  pw.TableRow _buildDayRow(_DayData d) {
+    final isSunday = d.date.weekday == DateTime.sunday;
+    final isWeekTotal =
+        isSunday &&
+        (d.attendance == null || d.attendance!.status == Status.empty);
+    final bg = isWeekTotal ? PdfColors.grey200 : PdfColors.white;
+
+    final String debut;
+    final String fin;
+    final String explication;
+
+    if (isWeekTotal) {
+      debut = 'DIM';
+      fin = 'DIM';
+      explication = '';
+    } else if (d.attendance == null || d.attendance!.status == Status.empty) {
+      debut = '';
+      fin = '';
+      explication = '';
+    } else {
+      final status = d.attendance!.status;
+      switch (status) {
+        case Status.p:
+          debut = d.attendance!.enter?.displayTime() ?? '--:--';
+          fin = d.attendance!.leave?.displayTime() ?? '--:--';
+          explication = '';
+        case Status.r:
+          debut = 'R';
+          fin = 'R';
+          explication = 'REPOS';
+        case Status.c:
+          debut = 'C';
+          fin = 'C';
+          explication = 'CONGÉ';
+        case Status.a:
+          debut = 'A';
+          fin = 'A';
+          explication = 'ABSENCE';
+        case Status.j:
+          debut = 'J';
+          fin = 'J';
+          explication = 'JOUR FÉRIÉ';
+        case Status.m:
+          debut = 'M';
+          fin = 'M';
+          explication = 'MALADIE';
+        case Status.ac:
+          debut = 'AC';
+          fin = 'AC';
+          explication = 'ACC. TRAVAIL';
+        case Status.dc:
+          debut = 'DC';
+          fin = 'DC';
+          explication = 'DÉCÈS';
+        default:
+          debut = '';
+          fin = '';
+          explication = '';
+      }
+    }
+
+    final suppStr = (d.diff != null && !d.diff!.isNegative)
+        ? d.diff!.formatTime()
+        : '';
+    final reposStr = (d.diff != null && d.diff!.isNegative)
+        ? d.diff!.formatTime()
+        : '';
+    final restantStr = d.restant != null ? d.restant!.formatTime() : '';
+
+    return pw.TableRow(
+      decoration: pw.BoxDecoration(color: bg),
+      children: [
+        _dataCell(
+          d.day.toString(),
+          style: _boldCellStyle,
+          align: pw.Alignment.center,
+        ),
+        _dataCell(debut, align: pw.Alignment.center),
+        _dataCell(fin, align: pw.Alignment.center),
+        _dataCell(suppStr, align: pw.Alignment.center),
+        _dataCell(reposStr, align: pw.Alignment.center),
+        _dataCell(restantStr, align: pw.Alignment.center),
+        _dataCell(isWeekTotal ? 'DIM' : '', align: pw.Alignment.center),
+        _dataCell(explication),
+      ],
+    );
+  }
+
+  pw.TableRow _buildTotalRow(
+    int dayCount,
+    Duration totalSupp,
+    Duration totalRepos,
+    Duration totalRestant,
+  ) {
+    return pw.TableRow(
+      decoration: const pw.BoxDecoration(color: PdfColors.grey300),
+      children: [
+        _dataCell('TOTAL', style: _totalStyle, align: pw.Alignment.center),
+        _dataCell(''),
+        _dataCell(''),
+        _dataCell(
+          totalSupp.formatTime(),
+          style: _totalStyle,
+          align: pw.Alignment.center,
+        ),
+        _dataCell(
+          totalRepos.formatTime(),
+          style: _totalStyle,
+          align: pw.Alignment.center,
+        ),
+        _dataCell(
+          totalRestant.formatTime(),
+          style: _totalStyle,
+          align: pw.Alignment.center,
+        ),
+        _dataCell(''),
+        _dataCell(''),
+      ],
+    );
+  }
+
+  pw.Widget _buildSignatureRow() {
+    final style = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
+    return pw.Row(
+      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
+      children: [
+        pw.Text('Chef signature', style: style),
+        pw.Text(
+          "Directeur d'entrepôt et de logistique\nsignature",
+          style: style,
+        ),
+      ],
+    );
+  }
+
+  pw.Widget _headerCell(String text) => pw.SizedBox(
+    height: 30,
+    child: pw.Center(
+      child: pw.Text(text, style: _headerStyle, textAlign: pw.TextAlign.center),
+    ),
+  );
+
+  pw.Widget _dataCell(
+    String text, {
+    pw.TextStyle? style,
+    pw.Alignment align = pw.Alignment.centerLeft,
+  }) => pw.Container(
+    height: 20,
+    alignment: align,
+    padding: const pw.EdgeInsets.symmetric(horizontal: 3),
+    child: pw.Text(text, style: style ?? _cellStyle),
+  );
+}
+
+class _DayData {
+  final int day;
+  final DateTime date;
+  final Attendance? attendance;
+  final Duration? diff;
+  final Duration? restant;
+
+  _DayData({
+    required this.day,
+    required this.date,
+    required this.attendance,
+    required this.diff,
+    required this.restant,
+  });
+}
