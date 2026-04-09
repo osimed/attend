@@ -13,6 +13,7 @@ import 'package:attend/services/export_service.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:open_file/open_file.dart';
+import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart';
 
@@ -149,8 +150,9 @@ class _EmployeeNameCell extends StatelessWidget {
           month,
         );
         final dir = await getApplicationCacheDirectory();
-        final pdfPath =
-            '${dir.path}/${row.employee.firstName}-${row.employee.lastName}-${month.month}-${month.year}.pdf';
+        final pdfName =
+            '${row.employee.firstName}-${row.employee.lastName}-${month.month}-${month.year}.pdf';
+        final pdfPath = join(dir.path, pdfName);
         File(pdfPath).writeAsBytesSync(pdf);
         OpenFile.open(pdfPath);
       },
