@@ -8,7 +8,8 @@ permissions:
   contents: write
 
 jobs:
-  build:
+  # ─── Android ────────────────────────────────────────────────────────────────
+  build-android:
     runs-on: ubuntu-latest
 
     steps:
@@ -18,7 +19,7 @@ jobs:
       - name: Setup Java
         uses: actions/setup-java@v5
         with:
-          distribution: 'zulu' 
+          distribution: 'zulu'
           java-version: '17'
           cache: 'gradle'
 
@@ -31,7 +32,7 @@ jobs:
       - name: Install dependencies
         run: flutter pub get
 
-      - name: Flutter analyse 
+      - name: Flutter analyse
         run: flutter analyze
 
       - name: Build APK
@@ -41,18 +42,59 @@ jobs:
         id: tag
         run: echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
 
-      - name: Rename apk
+      - name: Rename APKs
         run: |
           cd build/app/outputs/flutter-apk
           for file in app-*-release.apk; do
-            abi=$(echo "$file"| sed -E 's/app-(.*)-release\.apk/\1/')
+            abi=$(echo "$file" | sed -E 's/app-(.*)-release\.apk/\1/')
             mv "$file" "attend_${{ steps.tag.outputs.tag }}_$abi.apk"
           done
 
-      - name: Create Release
+      - name: Upload to Release
         uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ steps.tag.outputs.tag }}
           files: build/app/outputs/flutter-apk/*.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+  # ─── Windows ────────────────────────────────────────────────────────────────
+  build-windows:
+    runs-on: windows-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          channel: stable
+          cache: true
+
+      - name: Install dependencies
+        run: flutter pub get
+
+      - name: Build Windows
+        run: flutter build windows --release
+
+      - name: Get Tag
+        id: tag
+        run: |
+          $tag = "${{ github.ref }}" -replace 'refs/tags/', ''
+          echo "tag=$tag" >> $env:GITHUB_OUTPUT
+        shell: pwsh
+
+      - name: Build Installer with Inno Setup
+        run: |
+          $iscc = "C:\Program Files (x86)\Inno Setup 6\ISCC.exe"
+          & $iscc /DMyAppVersion="${{ steps.tag.outputs.tag }}" windows\installer.iss
+        shell: pwsh
+
+      - name: Upload to Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: Release ${{ steps.tag.outputs.tag }}
+          files: installer_output/attend_setup_${{ steps.tag.outputs.tag }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
