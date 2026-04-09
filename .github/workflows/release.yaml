@@ -95,6 +95,6 @@ jobs:
         uses: softprops/action-gh-release@v2
         with:
           name: Release ${{ steps.tag.outputs.tag }}
-          files: installer_output/attend_setup_${{ steps.tag.outputs.tag }}.exe
+          files: windows/installer_output/attend_setup_${{ steps.tag.outputs.tag }}.exe
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
