@@ -152,9 +152,10 @@ class _EmployeeNameCell extends StatelessWidget {
         final dir = await getApplicationCacheDirectory();
         final pdfName =
             '${row.employee.firstName}-${row.employee.lastName}-${month.month}-${month.year}.pdf';
-        final pdfPath = join(dir.path, pdfName);
-        File(pdfPath).writeAsBytesSync(pdf);
-        OpenFile.open(pdfPath);
+        final pdfFile = File(join(dir.path, pdfName));
+        if (await pdfFile.exists()) await pdfFile.delete();
+        await pdfFile.writeAsBytes(pdf);
+        OpenFile.open(pdfFile.path);
       },
       onLongPress: () {
         context.read<HeaderPanelBloc>().add(
