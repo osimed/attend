@@ -145,8 +145,12 @@ class _EmployeeNameCell extends StatelessWidget {
   Widget build(BuildContext context) {
     return InkWell(
       onTap: () async {
+        final currentState = context.read<CalendarGridBloc>().state;
+        final freshRow = currentState.calendar.firstWhere(
+          (r) => r.employee.id == row.employee.id,
+        );
         final pdf = await locator.get<ExportService>().genEmployeePdf(
-          row,
+          freshRow,
           month,
         );
         final dir = await getApplicationCacheDirectory();
