@@ -149,7 +149,11 @@ class ExportService {
             '${employee.lastName.toUpperCase()} ${employee.firstName.toUpperCase()}',
             flex: 2.2,
           ),
-          field('POSTE', employee.team.name.toUpperCase(), flex: 0.7),
+          field(
+            'POSTE',
+            '${employee.team.fullname} - ${employee.job}',
+            flex: 2.8,
+          ),
           field('MOIS', month.month.toString().padLeft(2, '0'), flex: 0.6),
           field('AN', month.year.toString(), flex: 0.6),
         ],

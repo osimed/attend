@@ -5,6 +5,7 @@ import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_state.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
+import 'package:flutter_typeahead/flutter_typeahead.dart';
 
 class EditEmployee extends StatefulWidget {
   final Employee? employee;
@@ -24,6 +25,10 @@ class _EditEmployeeState extends State<EditEmployee> {
   late final lastNameController = TextEditingController(
     text: widget.employee?.lastName,
   );
+  late final idController = TextEditingController(
+    text: widget.employee?.id.toString(),
+  );
+  late final jobController = TextEditingController(text: widget.employee?.job);
   late final collectedController = TextEditingController(
     text: widget.employee?.collected.formatTime(),
   );
@@ -35,8 +40,10 @@ class _EditEmployeeState extends State<EditEmployee> {
       listener: (context, state) {
         if (state is EditingEmployee) {
           currentEmployeeId = state.employee?.id;
+          idController.text = currentEmployeeId?.toString() ?? '';
           firstNameController.text = state.employee?.firstName ?? '';
           lastNameController.text = state.employee?.lastName ?? '';
+          jobController.text = state.employee?.job ?? '';
           team = state.employee?.team ?? .exp;
           collectedController.text =
               state.employee?.collected.formatTime() ?? '';
@@ -56,23 +63,27 @@ class _EditEmployeeState extends State<EditEmployee> {
                       child: Row(
                         mainAxisAlignment: .center,
                         children: [
+                          Flexible(child: buildIdTextField()),
+                          const SizedBox(width: 5),
                           Flexible(child: buildFirstNameField()),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 5),
                           Flexible(child: buildLastNameField()),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 5),
                           Expanded(child: buildSaveEmployeeButton(context)),
                         ],
                       ),
                     ),
-                    const SizedBox(height: 10),
+                    const SizedBox(height: 5),
                     SizedBox(
                       height: 56,
                       child: Row(
                         children: [
                           Flexible(child: buildTeamSelector()),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 5),
+                          Flexible(child: buildJobTextField()),
+                          const SizedBox(width: 5),
                           Flexible(child: buildCollectedTimeField()),
-                          const SizedBox(width: 10),
+                          const SizedBox(width: 5),
                           Expanded(child: buildDeleteEmployeeButton(context)),
                         ],
                       ),
@@ -83,26 +94,42 @@ class _EditEmployeeState extends State<EditEmployee> {
               return Column(
                 mainAxisSize: .min,
                 children: [
-                  buildFirstNameField(),
-                  const SizedBox(height: 10),
-                  buildLastNameField(),
-                  const SizedBox(height: 10),
+                  Row(
+                    crossAxisAlignment: .start,
+                    mainAxisSize: .max,
+                    children: [
+                      Expanded(child: buildFirstNameField()),
+                      const SizedBox(width: 5),
+                      Expanded(child: buildLastNameField()),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
+                  Row(
+                    crossAxisAlignment: .start,
+                    mainAxisSize: .max,
+                    children: [
+                      Expanded(child: buildIdTextField()),
+                      const SizedBox(width: 5),
+                      Expanded(child: buildJobTextField()),
+                    ],
+                  ),
+                  const SizedBox(height: 5),
                   Row(
                     crossAxisAlignment: .start,
                     mainAxisSize: .max,
                     children: [
                       Expanded(child: buildTeamSelector()),
-                      const SizedBox(width: 10),
+                      const SizedBox(width: 5),
                       Expanded(child: buildCollectedTimeField()),
                     ],
                   ),
-                  const SizedBox(height: 10),
+                  const SizedBox(height: 5),
                   SizedBox(
                     height: 56,
                     child: Row(
                       children: [
                         Expanded(child: buildSaveEmployeeButton(context)),
-                        const SizedBox(width: 10),
+                        const SizedBox(width: 5),
                         Expanded(child: buildDeleteEmployeeButton(context)),
                       ],
                     ),
@@ -141,9 +168,10 @@ class _EditEmployeeState extends State<EditEmployee> {
           context.read<HeaderPanelBloc>().add(
             SaveEmployee(
               Employee(
-                id: currentEmployeeId ?? -1,
+                id: currentEmployeeId ?? int.parse(idController.text),
                 firstName: firstNameController.text,
                 lastName: lastNameController.text,
+                job: jobController.text,
                 team: team,
                 collected: collectedController.text.parseTime() ?? .zero,
               ),
@@ -164,6 +192,9 @@ class _EditEmployeeState extends State<EditEmployee> {
     return TextFormField(
       controller: collectedController,
       keyboardType: .number,
+      onTapOutside: (_) {
+        FocusScope.of(context).unfocus();
+      },
       validator: (value) {
         if (value?.isEmpty ?? true) {
           return 'Ce champ est obligatoire';
@@ -173,7 +204,10 @@ class _EditEmployeeState extends State<EditEmployee> {
         }
         return null;
       },
-      decoration: const InputDecoration(labelText: "épargne", filled: true),
+      decoration: const InputDecoration(
+        labelText: "heures collectées",
+        filled: true,
+      ),
     );
   }
 
@@ -188,7 +222,7 @@ class _EditEmployeeState extends State<EditEmployee> {
           decoration: const InputDecoration(labelText: "équipe", filled: true),
           items: [
             for (final t in Team.values)
-              DropdownMenuItem(value: t, child: Text(t.name)),
+              DropdownMenuItem(value: t, child: Text(t.fullname)),
           ],
           onChanged: (t) => team = t ?? team,
         );
@@ -199,6 +233,9 @@ class _EditEmployeeState extends State<EditEmployee> {
   TextFormField buildLastNameField() {
     return TextFormField(
       controller: lastNameController,
+      onTapOutside: (_) {
+        FocusScope.of(context).unfocus();
+      },
       validator: (value) {
         if (value?.isEmpty ?? true) {
           return 'Ce champ est obligatoire';
@@ -212,6 +249,9 @@ class _EditEmployeeState extends State<EditEmployee> {
   TextFormField buildFirstNameField() {
     return TextFormField(
       controller: firstNameController,
+      onTapOutside: (_) {
+        FocusScope.of(context).unfocus();
+      },
       validator: (value) {
         if (value?.isEmpty ?? true) {
           return 'Ce champ est obligatoire';
@@ -222,10 +262,88 @@ class _EditEmployeeState extends State<EditEmployee> {
     );
   }
 
+  TextFormField buildIdTextField() {
+    return TextFormField(
+      controller: idController,
+      onTapOutside: (_) {
+        FocusScope.of(context).unfocus();
+      },
+      readOnly: currentEmployeeId != null,
+      validator: (value) {
+        if (value?.isEmpty ?? true) {
+          return 'Ce champ est obligatoire';
+        }
+        if (int.tryParse(value!) == null) {
+          return 'Un numéro est reqius';
+        }
+        return null;
+      },
+      decoration: const InputDecoration(labelText: "sup", filled: true),
+    );
+  }
+
+  TypeAheadField buildJobTextField() {
+    return TypeAheadField<String>(
+      controller: jobController,
+      builder: (context, controller, focusNode) {
+        return TextFormField(
+          controller: controller,
+          focusNode: focusNode,
+          onTapOutside: (_) {
+            FocusScope.of(context).unfocus();
+          },
+          validator: (value) {
+            if (value?.isEmpty ?? true) {
+              return 'Ce champ est obligatoire';
+            }
+            return null;
+          },
+          decoration: const InputDecoration(labelText: "poste", filled: true),
+        );
+      },
+      hideOnEmpty: true,
+      suggestionsCallback: (s) {
+        if (s.isNotEmpty) {
+          return [];
+        }
+        return [
+          'Contrôleur',
+          'Chef Rassemblement',
+          'Assistant Chef Rassemblement',
+          'Chef Expédition',
+          'Chef Réception',
+          'Sélecteur',
+          'Porteur',
+          'IT opérateur',
+          'Cariste',
+          'Manutentionnaine',
+          'Agent de nettoyage',
+          'Agent de sécurite',
+        ];
+      },
+      constraints: BoxConstraints.tightFor(
+        width: MediaQuery.of(context).size.width - 20,
+      ),
+      constrainWidth: false,
+      onSelected: (value) {
+        jobController.text = value;
+      },
+      listBuilder: (context, children) => Padding(
+        padding: const EdgeInsets.all(8.0),
+        child: Wrap(spacing: 8, runSpacing: -2, children: children),
+      ),
+      itemBuilder: (context, job) {
+        return Chip(label: Text(job));
+      },
+    );
+  }
+
   @override
   void dispose() {
     firstNameController.dispose();
     lastNameController.dispose();
+    idController.dispose();
+    jobController.dispose();
     collectedController.dispose();
     super.dispose();
   }

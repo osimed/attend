@@ -26,7 +26,17 @@ class AttendanceTable extends Table {
   Set<Column> get primaryKey => {employeeId, date};
 }
 
-enum Team { exp, rss }
+enum Team {
+  exp,
+  rss;
+
+  String get fullname {
+    return switch (this) {
+      .exp => 'Expédition',
+      .rss => 'Rassemblement',
+    };
+  }
+}
 
 @DataClassName('Employee')
 class EmployeeTable extends Table {
@@ -144,6 +154,7 @@ class AppDatabase extends _$AppDatabase {
         firstName: Value(employee.firstName),
         lastName: Value(employee.lastName),
         team: Value(employee.team),
+        job: Value(employee.job),
         collected: Value(employee.collected),
         leaveDate: Value(employee.leaveDate),
       ),
