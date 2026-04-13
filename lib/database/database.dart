@@ -1,6 +1,10 @@
+import 'dart:io' as io;
+
 import 'package:drift/drift.dart';
-import 'package:drift_flutter/drift_flutter.dart';
+import 'package:drift/native.dart';
 import 'package:flutter/material.dart' show TimeOfDay;
+import 'package:path/path.dart';
+import 'package:path_provider/path_provider.dart';
 
 part 'database.g.dart';
 
@@ -157,6 +161,18 @@ class AppDatabase extends _$AppDatabase {
   }
 
   static QueryExecutor _openConnection() {
-    return driftDatabase(name: 'attend');
+    return LazyDatabase(() async {
+      final newDir = await getApplicationSupportDirectory();
+      final newFile = io.File(join(newDir.path, 'attend.db'));
+      if (!await newFile.exists()) {
+        final oldDir = await getApplicationDocumentsDirectory();
+        final oldFile = io.File(join(oldDir.path, 'attend.db'));
+        if (await oldFile.exists()) {
+          await oldFile.copy(newFile.path);
+          await oldFile.delete();
+        }
+      }
+      return NativeDatabase(newFile);
+    });
   }
 }
