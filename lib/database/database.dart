@@ -2,13 +2,54 @@ import 'dart:io' as io;
 
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
-import 'package:flutter/material.dart' show TimeOfDay;
+import 'package:flutter/material.dart' show TimeOfDay, Color, Colors;
 import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 
 part 'database.g.dart';
 
-enum Status { empty, p, r, c, a, j, m, ac, dc }
+enum Status {
+  empty,
+  p,
+  r,
+  c,
+  a,
+  j,
+  m,
+  ac,
+  dc;
+
+  String get fullname {
+    return switch (this) {
+      .r => 'REPOS',
+      .c => 'CONGÉ',
+      .a => 'ABSENCE',
+      .j => 'JOUR FÉRIÉ',
+      .m => 'MALADIE',
+      .ac => 'ACC. TRAVAIL',
+      .dc => 'DÉCÈS',
+      _ => '',
+    };
+  }
+
+  double dayValue(DateTime day) {
+    if (this == .r || this == .c) {
+      return day.weekday == DateTime.saturday ? 0.5 : 1;
+    }
+    return 0;
+  }
+
+  Color? get color {
+    return switch (this) {
+      .c => Colors.redAccent.shade100,
+      .a => Colors.amber,
+      .r => Colors.tealAccent.shade700,
+      .j => Colors.blueAccent.shade100,
+      .m => Colors.lime.shade600,
+      _ => null,
+    };
+  }
+}
 
 @TableIndex(name: 'date_idx', columns: {#date})
 @TableIndex(name: 'employee_id_idx', columns: {#employeeId})

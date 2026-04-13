@@ -104,14 +104,7 @@ class AttendanceCell extends StatelessWidget {
         return Padding(
           padding: const EdgeInsets.all(.5),
           child: Material(
-            color: switch (attendance?.status) {
-              .c => Colors.redAccent,
-              .a => Colors.amber,
-              .r => Colors.teal,
-              .j => Colors.blueAccent,
-              .m => Colors.lime.shade600,
-              _ => null,
-            },
+            color: attendance?.status.color,
             child: InkWell(
               onTap: () {
                 context.read<HeaderPanelBloc>().add(

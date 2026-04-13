@@ -18,16 +18,24 @@ Map<int, pw.TableColumnWidth> _columns() => {
   7: const pw.FlexColumnWidth(0.15), // EXPLICATION
 };
 
-final _headerStyle = pw.TextStyle(fontSize: 7, fontWeight: pw.FontWeight.bold);
+final _headerStyle = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
 
-final _cellStyle = const pw.TextStyle(fontSize: 8);
+const _cellStyle = pw.TextStyle(fontSize: 8);
 
-final _boldCellStyle = pw.TextStyle(
-  fontSize: 8,
-  fontWeight: pw.FontWeight.bold,
+final _boldCellStyle = pw.TextStyle(fontSize: 10, fontWeight: .bold);
+
+final _collectedStyle = pw.TextStyle(fontSize: 17, fontWeight: .bold);
+
+final _statusStyle = pw.TextStyle(fontSize: 10, font: pw.Font.courier());
+
+final _weekTotalStyle = pw.TextStyle(fontSize: 8, fontWeight: .bold);
+
+final _statusPadding = const pw.EdgeInsets.symmetric(
+  horizontal: 5,
+  vertical: 1,
 );
 
-final _totalStyle = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
+final _totalStyle = pw.TextStyle(fontSize: 8, fontWeight: .bold);
 
 class ExportService {
   final AttendService _attendService;
@@ -40,10 +48,32 @@ class ExportService {
 
     final List<_DayData> days = [];
 
+    Duration weekRepos = .zero;
+    Duration weekSupp = .zero;
+
+    double rDays = 0.0;
+    double cDays = 0.0;
+
     for (int day = 1; day <= daysInMonth; day++) {
       final date = DateTime(month.year, month.month, day);
       final attendance = row.attendances[day];
+      final status = attendance?.status;
       final diff = _attendService.calcTimeDiff(attendance);
+
+      List<Duration> restant = [];
+      if (diff != null) {
+        if (!diff.isNegative) {
+          weekSupp += diff;
+        } else {
+          weekRepos += diff;
+        }
+      } else if (date.weekday == DateTime.sunday) {
+        restant.addAll([weekRepos, weekSupp]);
+        weekRepos = weekSupp = .zero;
+      }
+
+      if (status == .r) rDays += status!.dayValue(date);
+      if (status == .c) cDays += status!.dayValue(date);
 
       days.add(
         _DayData(
@@ -51,23 +81,11 @@ class ExportService {
           date: date,
           attendance: attendance,
           diff: diff,
-          restant: null,
+          restant: restant,
         ),
       );
     }
-
-    Duration totalSupp = Duration.zero;
-    Duration totalRepos = Duration.zero;
-    for (final d in days) {
-      if (d.diff != null) {
-        if (!d.diff!.isNegative) {
-          totalSupp += d.diff!;
-        } else {
-          totalRepos += d.diff!;
-        }
-      }
-    }
-    final totalRestant = row.employee.collected + totalSupp + totalRepos;
+    final collected = row.employee.collected;
 
     pdf.addPage(
       pw.Page(
@@ -75,34 +93,27 @@ class ExportService {
         margin: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 20),
         build: (pw.Context context) {
           return pw.Column(
-            crossAxisAlignment: pw.CrossAxisAlignment.stretch,
+            crossAxisAlignment: .stretch,
             children: [
               pw.Text(
                 row.employee.collected.formatTime(),
-                style: pw.TextStyle(fontSize: 17, fontWeight: .bold),
+                style: _collectedStyle,
                 textAlign: .center,
               ),
               pw.SizedBox(height: 6),
               _buildPageHeader(row.employee, month),
               pw.SizedBox(height: 6),
-
               pw.Table(
                 border: pw.TableBorder.all(width: 0.5),
                 columnWidths: _columns(),
                 children: [
                   _buildColumnHeaders(),
                   ...days.map((d) => _buildDayRow(d)),
-                  _buildTotalRow(
-                    days.length,
-                    totalSupp,
-                    totalRepos,
-                    totalRestant,
-                  ),
+                  _buildTotalRow(days, collected),
                 ],
               ),
-
               pw.SizedBox(height: 16),
-              _buildSignatureRow(),
+              _buildSignatureRow(rDays, cDays),
             ],
           );
         },
@@ -178,64 +189,31 @@ class ExportService {
   }
 
   pw.TableRow _buildDayRow(_DayData d) {
-    final isSunday = d.date.weekday == DateTime.sunday;
-    final isWeekTotal =
-        isSunday &&
-        (d.attendance == null || d.attendance!.status == Status.empty);
+    final isWeekTotal = d.restant.isNotEmpty;
     final bg = isWeekTotal ? PdfColors.grey200 : PdfColors.white;
+    final status = d.attendance?.status;
 
-    final String debut;
-    final String fin;
-    final String explication;
+    final String start;
+    final String end;
+    final String reason;
 
+    bool isStatusDisplay = false;
     if (isWeekTotal) {
-      debut = 'DIM';
-      fin = 'DIM';
-      explication = '';
-    } else if (d.attendance == null || d.attendance!.status == Status.empty) {
-      debut = '';
-      fin = '';
-      explication = '';
+      start = 'DIM';
+      end = 'DIM';
+      reason = '';
+    } else if (status == null || status == .empty) {
+      start = '';
+      end = '';
+      reason = '';
+    } else if (status == .p) {
+      start = d.attendance!.enter?.displayTime() ?? '--:--';
+      end = d.attendance!.leave?.displayTime() ?? '--:--';
+      reason = '';
     } else {
-      final status = d.attendance!.status;
-      switch (status) {
-        case Status.p:
-          debut = d.attendance!.enter?.displayTime() ?? '--:--';
-          fin = d.attendance!.leave?.displayTime() ?? '--:--';
-          explication = '';
-        case Status.r:
-          debut = 'R';
-          fin = 'R';
-          explication = 'REPOS';
-        case Status.c:
-          debut = 'C';
-          fin = 'C';
-          explication = 'CONGÉ';
-        case Status.a:
-          debut = 'A';
-          fin = 'A';
-          explication = 'ABSENCE';
-        case Status.j:
-          debut = 'J';
-          fin = 'J';
-          explication = 'JOUR FÉRIÉ';
-        case Status.m:
-          debut = 'M';
-          fin = 'M';
-          explication = 'MALADIE';
-        case Status.ac:
-          debut = 'AC';
-          fin = 'AC';
-          explication = 'ACC. TRAVAIL';
-        case Status.dc:
-          debut = 'DC';
-          fin = 'DC';
-          explication = 'DÉCÈS';
-        default:
-          debut = '';
-          fin = '';
-          explication = '';
-      }
+      start = end = status.name.toUpperCase();
+      reason = status.fullname;
+      isStatusDisplay = true;
     }
 
     final suppStr = (d.diff != null && !d.diff!.isNegative)
@@ -244,7 +222,14 @@ class ExportService {
     final reposStr = (d.diff != null && d.diff!.isNegative)
         ? d.diff!.formatTime()
         : '';
-    final restantStr = d.restant != null ? d.restant!.formatTime() : '';
+
+    Duration restant = .zero;
+    if (isWeekTotal) {
+      restant = d.restant.first + d.restant.last;
+    }
+
+    final statusColor = status?.color?.toARGB32();
+    final color = statusColor != null ? PdfColor.fromInt(statusColor) : null;
 
     return pw.TableRow(
       decoration: pw.BoxDecoration(color: bg),
@@ -254,59 +239,88 @@ class ExportService {
           style: _boldCellStyle,
           align: pw.Alignment.center,
         ),
-        _dataCell(debut, align: pw.Alignment.center),
-        _dataCell(fin, align: pw.Alignment.center),
-        _dataCell(suppStr, align: pw.Alignment.center),
-        _dataCell(reposStr, align: pw.Alignment.center),
-        _dataCell(restantStr, align: pw.Alignment.center),
-        _dataCell(isWeekTotal ? 'DIM' : '', align: pw.Alignment.center),
-        _dataCell(explication),
+        _dataCell(
+          start,
+          align: .center,
+          color: color,
+          padding: isStatusDisplay ? _statusPadding : null,
+          style: isStatusDisplay ? _statusStyle : null,
+        ),
+        _dataCell(
+          end,
+          align: .center,
+          color: color,
+          padding: isStatusDisplay ? _statusPadding : null,
+          style: isStatusDisplay ? _statusStyle : null,
+        ),
+        _dataCell(
+          isWeekTotal ? d.restant.last.formatTime() : suppStr,
+          align: .center,
+          style: isWeekTotal ? _weekTotalStyle : null,
+        ),
+        _dataCell(
+          isWeekTotal ? d.restant.first.formatTime() : reposStr,
+          align: .center,
+          style: isWeekTotal ? _weekTotalStyle : null,
+        ),
+        _dataCell(
+          isWeekTotal ? restant.formatTime() : '',
+          align: .center,
+          style: isWeekTotal
+              ? _weekTotalStyle.copyWith(color: PdfColors.red600)
+              : null,
+        ),
+        _dataCell(isWeekTotal ? 'DIM' : '', align: .center),
+        _dataCell(reason),
       ],
     );
   }
 
-  pw.TableRow _buildTotalRow(
-    int dayCount,
-    Duration totalSupp,
-    Duration totalRepos,
-    Duration totalRestant,
-  ) {
+  pw.TableRow _buildTotalRow(List<_DayData> days, Duration collected) {
+    Duration total = .zero;
+    for (final day in days) {
+      if (day.restant.isNotEmpty) {
+        total += day.restant.first + day.restant.last;
+      }
+    }
     return pw.TableRow(
       decoration: const pw.BoxDecoration(color: PdfColors.grey300),
       children: [
-        _dataCell('TOTAL', style: _totalStyle, align: pw.Alignment.center),
+        _dataCell('TOTAL', style: _totalStyle, align: .center, padding: .zero),
         _dataCell(''),
         _dataCell(''),
+        _dataCell(''),
+        _dataCell(''),
+        _dataCell(total.formatTime(), style: _totalStyle, align: .center),
+        _dataCell(collected.formatTime(), style: _totalStyle, align: .center),
         _dataCell(
-          totalSupp.formatTime(),
+          (total + collected).formatTime(),
           style: _totalStyle,
-          align: pw.Alignment.center,
+          align: .center,
         ),
-        _dataCell(
-          totalRepos.formatTime(),
-          style: _totalStyle,
-          align: pw.Alignment.center,
-        ),
-        _dataCell(
-          totalRestant.formatTime(),
-          style: _totalStyle,
-          align: pw.Alignment.center,
-        ),
-        _dataCell(''),
-        _dataCell(''),
       ],
     );
   }
 
-  pw.Widget _buildSignatureRow() {
+  pw.Widget _buildSignatureRow(double rDays, double cDays) {
     final style = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
     return pw.Row(
-      mainAxisAlignment: pw.MainAxisAlignment.spaceBetween,
       children: [
-        pw.Text('Chef signature', style: style),
-        pw.Text(
-          "Directeur d'entrepôt et de logistique\nsignature",
-          style: style,
+        pw.Expanded(child: pw.Text('Chef signature', style: style)),
+        pw.Expanded(
+          child: pw.Text(
+            "Directeur d'entrepôt et de logistique\nsignature",
+            style: style,
+          ),
+        ),
+        pw.Expanded(
+          child: pw.Column(
+            mainAxisSize: .min,
+            children: [
+              pw.Text('${Status.r.fullname}: $rDays', style: style),
+              pw.Text('${Status.c.fullname}: $cDays', style: style),
+            ],
+          ),
         ),
       ],
     );
@@ -321,13 +335,20 @@ class ExportService {
 
   pw.Widget _dataCell(
     String text, {
+    PdfColor? color,
     pw.TextStyle? style,
-    pw.Alignment align = pw.Alignment.centerLeft,
+    pw.Alignment align = .centerLeft,
+    pw.EdgeInsets? padding = const .symmetric(horizontal: 2),
   }) => pw.Container(
     height: 20,
-    alignment: align,
-    padding: const pw.EdgeInsets.symmetric(horizontal: 3),
-    child: pw.Text(text, style: style ?? _cellStyle),
+    child: pw.Align(
+      alignment: align,
+      child: pw.Container(
+        color: color,
+        padding: padding,
+        child: pw.Text(text, style: style ?? _cellStyle),
+      ),
+    ),
   );
 }
 
@@ -336,7 +357,7 @@ class _DayData {
   final DateTime date;
   final Attendance? attendance;
   final Duration? diff;
-  final Duration? restant;
+  final List<Duration> restant;
 
   _DayData({
     required this.day,
