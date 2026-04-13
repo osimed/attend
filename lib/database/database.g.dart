@@ -53,6 +53,16 @@ class $EmployeeTableTable extends EmployeeTable
         type: DriftSqlType.string,
         requiredDuringInsert: true,
       ).withConverter<Team>($EmployeeTableTable.$converterteam);
+  static const VerificationMeta _jobMeta = const VerificationMeta('job');
+  @override
+  late final GeneratedColumn<String> job = GeneratedColumn<String>(
+    'job',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(''),
+  );
   @override
   late final GeneratedColumnWithTypeConverter<Duration, int> collected =
       GeneratedColumn<int>(
@@ -80,6 +90,7 @@ class $EmployeeTableTable extends EmployeeTable
     firstName,
     lastName,
     team,
+    job,
     collected,
     leaveDate,
   ];
@@ -114,6 +125,12 @@ class $EmployeeTableTable extends EmployeeTable
     } else if (isInserting) {
       context.missing(_lastNameMeta);
     }
+    if (data.containsKey('job')) {
+      context.handle(
+        _jobMeta,
+        job.isAcceptableOrUnknown(data['job']!, _jobMeta),
+      );
+    }
     if (data.containsKey('leave_date')) {
       context.handle(
         _leaveDateMeta,
@@ -147,6 +164,10 @@ class $EmployeeTableTable extends EmployeeTable
           data['${effectivePrefix}team'],
         )!,
       ),
+      job: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}job'],
+      )!,
       collected: $EmployeeTableTable.$convertercollected.fromSql(
         attachedDatabase.typeMapping.read(
           DriftSqlType.int,
@@ -176,6 +197,7 @@ class Employee extends DataClass implements Insertable<Employee> {
   final String firstName;
   final String lastName;
   final Team team;
+  final String job;
   final Duration collected;
   final DateTime? leaveDate;
   const Employee({
@@ -183,6 +205,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     required this.firstName,
     required this.lastName,
     required this.team,
+    required this.job,
     required this.collected,
     this.leaveDate,
   });
@@ -197,6 +220,7 @@ class Employee extends DataClass implements Insertable<Employee> {
         $EmployeeTableTable.$converterteam.toSql(team),
       );
     }
+    map['job'] = Variable<String>(job);
     {
       map['collected'] = Variable<int>(
         $EmployeeTableTable.$convertercollected.toSql(collected),
@@ -214,6 +238,7 @@ class Employee extends DataClass implements Insertable<Employee> {
       firstName: Value(firstName),
       lastName: Value(lastName),
       team: Value(team),
+      job: Value(job),
       collected: Value(collected),
       leaveDate: leaveDate == null && nullToAbsent
           ? const Value.absent()
@@ -233,6 +258,7 @@ class Employee extends DataClass implements Insertable<Employee> {
       team: $EmployeeTableTable.$converterteam.fromJson(
         serializer.fromJson<String>(json['team']),
       ),
+      job: serializer.fromJson<String>(json['job']),
       collected: serializer.fromJson<Duration>(json['collected']),
       leaveDate: serializer.fromJson<DateTime?>(json['leaveDate']),
     );
@@ -247,6 +273,7 @@ class Employee extends DataClass implements Insertable<Employee> {
       'team': serializer.toJson<String>(
         $EmployeeTableTable.$converterteam.toJson(team),
       ),
+      'job': serializer.toJson<String>(job),
       'collected': serializer.toJson<Duration>(collected),
       'leaveDate': serializer.toJson<DateTime?>(leaveDate),
     };
@@ -257,6 +284,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     String? firstName,
     String? lastName,
     Team? team,
+    String? job,
     Duration? collected,
     Value<DateTime?> leaveDate = const Value.absent(),
   }) => Employee(
@@ -264,6 +292,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     firstName: firstName ?? this.firstName,
     lastName: lastName ?? this.lastName,
     team: team ?? this.team,
+    job: job ?? this.job,
     collected: collected ?? this.collected,
     leaveDate: leaveDate.present ? leaveDate.value : this.leaveDate,
   );
@@ -273,6 +302,7 @@ class Employee extends DataClass implements Insertable<Employee> {
       firstName: data.firstName.present ? data.firstName.value : this.firstName,
       lastName: data.lastName.present ? data.lastName.value : this.lastName,
       team: data.team.present ? data.team.value : this.team,
+      job: data.job.present ? data.job.value : this.job,
       collected: data.collected.present ? data.collected.value : this.collected,
       leaveDate: data.leaveDate.present ? data.leaveDate.value : this.leaveDate,
     );
@@ -285,6 +315,7 @@ class Employee extends DataClass implements Insertable<Employee> {
           ..write('firstName: $firstName, ')
           ..write('lastName: $lastName, ')
           ..write('team: $team, ')
+          ..write('job: $job, ')
           ..write('collected: $collected, ')
           ..write('leaveDate: $leaveDate')
           ..write(')'))
@@ -293,7 +324,7 @@ class Employee extends DataClass implements Insertable<Employee> {
 
   @override
   int get hashCode =>
-      Object.hash(id, firstName, lastName, team, collected, leaveDate);
+      Object.hash(id, firstName, lastName, team, job, collected, leaveDate);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -302,6 +333,7 @@ class Employee extends DataClass implements Insertable<Employee> {
           other.firstName == this.firstName &&
           other.lastName == this.lastName &&
           other.team == this.team &&
+          other.job == this.job &&
           other.collected == this.collected &&
           other.leaveDate == this.leaveDate);
 }
@@ -311,6 +343,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
   final Value<String> firstName;
   final Value<String> lastName;
   final Value<Team> team;
+  final Value<String> job;
   final Value<Duration> collected;
   final Value<DateTime?> leaveDate;
   const EmployeeTableCompanion({
@@ -318,6 +351,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
     this.firstName = const Value.absent(),
     this.lastName = const Value.absent(),
     this.team = const Value.absent(),
+    this.job = const Value.absent(),
     this.collected = const Value.absent(),
     this.leaveDate = const Value.absent(),
   });
@@ -326,6 +360,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
     required String firstName,
     required String lastName,
     required Team team,
+    this.job = const Value.absent(),
     this.collected = const Value.absent(),
     this.leaveDate = const Value.absent(),
   }) : firstName = Value(firstName),
@@ -336,6 +371,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
     Expression<String>? firstName,
     Expression<String>? lastName,
     Expression<String>? team,
+    Expression<String>? job,
     Expression<int>? collected,
     Expression<DateTime>? leaveDate,
   }) {
@@ -344,6 +380,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
       if (firstName != null) 'first_name': firstName,
       if (lastName != null) 'last_name': lastName,
       if (team != null) 'team': team,
+      if (job != null) 'job': job,
       if (collected != null) 'collected': collected,
       if (leaveDate != null) 'leave_date': leaveDate,
     });
@@ -354,6 +391,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
     Value<String>? firstName,
     Value<String>? lastName,
     Value<Team>? team,
+    Value<String>? job,
     Value<Duration>? collected,
     Value<DateTime?>? leaveDate,
   }) {
@@ -362,6 +400,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
       firstName: firstName ?? this.firstName,
       lastName: lastName ?? this.lastName,
       team: team ?? this.team,
+      job: job ?? this.job,
       collected: collected ?? this.collected,
       leaveDate: leaveDate ?? this.leaveDate,
     );
@@ -384,6 +423,9 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
         $EmployeeTableTable.$converterteam.toSql(team.value),
       );
     }
+    if (job.present) {
+      map['job'] = Variable<String>(job.value);
+    }
     if (collected.present) {
       map['collected'] = Variable<int>(
         $EmployeeTableTable.$convertercollected.toSql(collected.value),
@@ -402,6 +444,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
           ..write('firstName: $firstName, ')
           ..write('lastName: $lastName, ')
           ..write('team: $team, ')
+          ..write('job: $job, ')
           ..write('collected: $collected, ')
           ..write('leaveDate: $leaveDate')
           ..write(')'))
@@ -884,6 +927,7 @@ typedef $$EmployeeTableTableCreateCompanionBuilder =
       required String firstName,
       required String lastName,
       required Team team,
+      Value<String> job,
       Value<Duration> collected,
       Value<DateTime?> leaveDate,
     });
@@ -893,6 +937,7 @@ typedef $$EmployeeTableTableUpdateCompanionBuilder =
       Value<String> firstName,
       Value<String> lastName,
       Value<Team> team,
+      Value<String> job,
       Value<Duration> collected,
       Value<DateTime?> leaveDate,
     });
@@ -958,6 +1003,11 @@ class $$EmployeeTableTableFilterComposer
         column: $table.team,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
+
+  ColumnFilters<String> get job => $composableBuilder(
+    column: $table.job,
+    builder: (column) => ColumnFilters(column),
+  );
 
   ColumnWithTypeConverterFilters<Duration, Duration, int> get collected =>
       $composableBuilder(
@@ -1025,6 +1075,11 @@ class $$EmployeeTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
+  ColumnOrderings<String> get job => $composableBuilder(
+    column: $table.job,
+    builder: (column) => ColumnOrderings(column),
+  );
+
   ColumnOrderings<int> get collected => $composableBuilder(
     column: $table.collected,
     builder: (column) => ColumnOrderings(column),
@@ -1056,6 +1111,9 @@ class $$EmployeeTableTableAnnotationComposer
 
   GeneratedColumnWithTypeConverter<Team, String> get team =>
       $composableBuilder(column: $table.team, builder: (column) => column);
+
+  GeneratedColumn<String> get job =>
+      $composableBuilder(column: $table.job, builder: (column) => column);
 
   GeneratedColumnWithTypeConverter<Duration, int> get collected =>
       $composableBuilder(column: $table.collected, builder: (column) => column);
@@ -1121,6 +1179,7 @@ class $$EmployeeTableTableTableManager
                 Value<String> firstName = const Value.absent(),
                 Value<String> lastName = const Value.absent(),
                 Value<Team> team = const Value.absent(),
+                Value<String> job = const Value.absent(),
                 Value<Duration> collected = const Value.absent(),
                 Value<DateTime?> leaveDate = const Value.absent(),
               }) => EmployeeTableCompanion(
@@ -1128,6 +1187,7 @@ class $$EmployeeTableTableTableManager
                 firstName: firstName,
                 lastName: lastName,
                 team: team,
+                job: job,
                 collected: collected,
                 leaveDate: leaveDate,
               ),
@@ -1137,6 +1197,7 @@ class $$EmployeeTableTableTableManager
                 required String firstName,
                 required String lastName,
                 required Team team,
+                Value<String> job = const Value.absent(),
                 Value<Duration> collected = const Value.absent(),
                 Value<DateTime?> leaveDate = const Value.absent(),
               }) => EmployeeTableCompanion.insert(
@@ -1144,6 +1205,7 @@ class $$EmployeeTableTableTableManager
                 firstName: firstName,
                 lastName: lastName,
                 team: team,
+                job: job,
                 collected: collected,
                 leaveDate: leaveDate,
               ),

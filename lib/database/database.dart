@@ -30,6 +30,7 @@ class EmployeeTable extends Table {
   TextColumn get firstName => text()();
   TextColumn get lastName => text()();
   TextColumn get team => textEnum<Team>()();
+  TextColumn get job => text().withDefault(const Constant(''))();
   IntColumn get collected =>
       integer().map(const DurationConverter()).withDefault(const Constant(0))();
   DateTimeColumn get leaveDate => dateTime().nullable()();
@@ -68,7 +69,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 2;
+  int get schemaVersion => 3;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -76,6 +77,9 @@ class AppDatabase extends _$AppDatabase {
     onUpgrade: (m, from, to) async {
       if (from < 2) {
         await m.addColumn(attendanceTable, attendanceTable.lunchBreak);
+      }
+      if (from < 3) {
+        await m.addColumn(employeeTable, employeeTable.job);
       }
     },
     beforeOpen: (d) async {
