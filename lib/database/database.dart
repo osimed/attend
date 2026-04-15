@@ -21,7 +21,7 @@ enum Status {
 
   String get fullname {
     return switch (this) {
-      .r => 'REPOS',
+      .r => 'RÉCUP',
       .c => 'CONGÉ',
       .a => 'ABSENCE',
       .j => 'JOUR FÉRIÉ',

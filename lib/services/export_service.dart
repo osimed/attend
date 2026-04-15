@@ -12,7 +12,7 @@ Map<int, pw.TableColumnWidth> _columns() => {
   1: const pw.FlexColumnWidth(0.13), // DÉBUT
   2: const pw.FlexColumnWidth(0.13), // FIN
   3: const pw.FlexColumnWidth(0.13), // SUPP
-  4: const pw.FlexColumnWidth(0.13), // REPOS
+  4: const pw.FlexColumnWidth(0.13), // RÉCUP
   5: const pw.FlexColumnWidth(0.13), // RESTANT
   6: const pw.FlexColumnWidth(0.14), // SIGNATURE
   7: const pw.FlexColumnWidth(0.15), // EXPLICATION
@@ -48,7 +48,7 @@ class ExportService {
 
     final List<_DayData> days = [];
 
-    Duration weekRepos = .zero;
+    Duration weekRecup = .zero;
     Duration weekSupp = .zero;
 
     double rDays = 0.0;
@@ -65,11 +65,11 @@ class ExportService {
         if (!diff.isNegative) {
           weekSupp += diff;
         } else {
-          weekRepos += diff;
+          weekRecup += diff;
         }
       } else if (date.weekday == DateTime.sunday) {
-        weekSum.addAll([weekRepos, weekSupp]);
-        weekRepos = weekSupp = .zero;
+        weekSum.addAll([weekRecup, weekSupp]);
+        weekRecup = weekSupp = .zero;
       }
 
       if (status == .r) rDays += status!.dayValue(date);
@@ -109,7 +109,7 @@ class ExportService {
                 children: [
                   _buildColumnHeaders(),
                   ...days.map((d) => _buildDayRow(d)),
-                  _buildTotalRow(days, weekSupp + weekRepos, collected),
+                  _buildTotalRow(days, weekSupp + weekRecup, collected),
                 ],
               ),
               pw.SizedBox(height: 16),
@@ -180,7 +180,7 @@ class ExportService {
         _headerCell('DÉBUT DE\nTRAVAIL'),
         _headerCell('FIN DE\nTRAVAIL'),
         _headerCell('HEURES\nSUPP'),
-        _headerCell('HEURES\nREPOS'),
+        _headerCell('HEURES\nRÉCUP'),
         _headerCell('HEURES\nRESTANTS'),
         _headerCell('SIGNATURE'),
         _headerCell('EXPLICATION'),
@@ -219,7 +219,7 @@ class ExportService {
     final suppStr = (d.diff != null && !d.diff!.isNegative)
         ? d.diff!.formatTime()
         : '';
-    final reposStr = (d.diff != null && d.diff!.isNegative)
+    final recupStr = (d.diff != null && d.diff!.isNegative)
         ? d.diff!.formatTime()
         : '';
 
@@ -259,7 +259,7 @@ class ExportService {
           style: isWeekTotal ? _weekTotalStyle : null,
         ),
         _dataCell(
-          isWeekTotal ? d.weekSum.first.formatTime() : reposStr,
+          isWeekTotal ? d.weekSum.first.formatTime() : recupStr,
           align: .center,
           style: isWeekTotal ? _weekTotalStyle : null,
         ),
