@@ -60,7 +60,7 @@ class ExportService {
       final status = attendance?.status;
       final diff = _attendService.calcTimeDiff(attendance);
 
-      List<Duration> restant = [];
+      List<Duration> weekSum = [];
       if (diff != null) {
         if (!diff.isNegative) {
           weekSupp += diff;
@@ -68,7 +68,7 @@ class ExportService {
           weekRepos += diff;
         }
       } else if (date.weekday == DateTime.sunday) {
-        restant.addAll([weekRepos, weekSupp]);
+        weekSum.addAll([weekRepos, weekSupp]);
         weekRepos = weekSupp = .zero;
       }
 
@@ -81,7 +81,7 @@ class ExportService {
           date: date,
           attendance: attendance,
           diff: diff,
-          restant: restant,
+          weekSum: weekSum,
         ),
       );
     }
@@ -109,7 +109,7 @@ class ExportService {
                 children: [
                   _buildColumnHeaders(),
                   ...days.map((d) => _buildDayRow(d)),
-                  _buildTotalRow(days, collected),
+                  _buildTotalRow(days, weekSupp + weekRepos, collected),
                 ],
               ),
               pw.SizedBox(height: 16),
@@ -189,7 +189,7 @@ class ExportService {
   }
 
   pw.TableRow _buildDayRow(_DayData d) {
-    final isWeekTotal = d.restant.isNotEmpty;
+    final isWeekTotal = d.weekSum.isNotEmpty;
     final bg = isWeekTotal ? PdfColors.grey200 : PdfColors.white;
     final status = d.attendance?.status;
 
@@ -225,7 +225,7 @@ class ExportService {
 
     Duration restant = .zero;
     if (isWeekTotal) {
-      restant = d.restant.first + d.restant.last;
+      restant = d.weekSum.first + d.weekSum.last;
     }
 
     final statusColor = status?.color?.toARGB32();
@@ -254,12 +254,12 @@ class ExportService {
           style: isStatusDisplay ? _statusStyle : null,
         ),
         _dataCell(
-          isWeekTotal ? d.restant.last.formatTime() : suppStr,
+          isWeekTotal ? d.weekSum.last.formatTime() : suppStr,
           align: .center,
           style: isWeekTotal ? _weekTotalStyle : null,
         ),
         _dataCell(
-          isWeekTotal ? d.restant.first.formatTime() : reposStr,
+          isWeekTotal ? d.weekSum.first.formatTime() : reposStr,
           align: .center,
           style: isWeekTotal ? _weekTotalStyle : null,
         ),
@@ -276,11 +276,11 @@ class ExportService {
     );
   }
 
-  pw.TableRow _buildTotalRow(List<_DayData> days, Duration collected) {
-    Duration total = .zero;
+  pw.TableRow _buildTotalRow(List<_DayData> days, Duration leftover, Duration collected) {
+    Duration total = leftover;
     for (final day in days) {
-      if (day.restant.isNotEmpty) {
-        total += day.restant.first + day.restant.last;
+      if (day.weekSum.isNotEmpty) {
+        total += day.weekSum.first + day.weekSum.last;
       }
     }
     return pw.TableRow(
@@ -357,13 +357,13 @@ class _DayData {
   final DateTime date;
   final Attendance? attendance;
   final Duration? diff;
-  final List<Duration> restant;
+  final List<Duration> weekSum;
 
   _DayData({
     required this.day,
     required this.date,
     required this.attendance,
     required this.diff,
-    required this.restant,
+    required this.weekSum,
   });
 }
