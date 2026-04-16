@@ -184,6 +184,7 @@ class AppDatabase extends _$AppDatabase {
         status: Value(attendance.status),
         enter: Value(attendance.enter),
         leave: Value(attendance.leave),
+        lunchBreak: Value(attendance.lunchBreak),
       ),
     );
   }
