@@ -149,13 +149,13 @@ class _EmployeeNameCell extends StatelessWidget {
         final freshRow = currentState.calendar.firstWhere(
           (r) => r.employee.id == row.employee.id,
         );
-        final pdf = await locator.get<ExportService>().genEmployeePdf(
+        final pdf = await locator.get<ExportService>().genTeamPdf([
           freshRow,
-          month,
-        );
+        ], month);
         final dir = await getApplicationCacheDirectory();
-        final pdfName =
-            '${row.employee.firstName}-${row.employee.lastName}-${month.month}-${month.year}.pdf';
+        final fname = row.employee.firstName.toLowerCase();
+        final lname = row.employee.lastName.toLowerCase();
+        final pdfName = '$fname-$lname-${month.month}-${month.year}.pdf';
         final pdfFile = File(join(dir.path, pdfName));
         if (await pdfFile.exists()) await pdfFile.delete();
         await pdfFile.writeAsBytes(pdf);

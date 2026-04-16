@@ -42,98 +42,102 @@ class ExportService {
 
   ExportService(this._attendService);
 
-  Future<Uint8List> genEmployeePdf(CalendarRow row, DateTime month) async {
+  Future<Uint8List> genTeamPdf(
+    List<CalendarRow> rows,
+    DateTime month,
+  ) async {
     final pdf = pw.Document();
     final daysInMonth = DateUtils.getDaysInMonth(month.year, month.month);
 
-    final List<_DayData> days = [];
+    for (final row in rows) {
+      final List<_DayData> days = [];
 
-    Duration weekRecup = .zero;
-    Duration weekSupp = .zero;
+      Duration weekRecup = .zero;
+      Duration weekSupp = .zero;
 
-    double rDays = 0.0;
-    double cDays = 0.0;
+      double rDays = 0.0;
+      double cDays = 0.0;
 
-    final leaveDate = row.employee.leaveDate;
-    int? leaveDay;
-    if (leaveDate != null &&
-        leaveDate.year == month.year &&
-        leaveDate.month == month.month) {
-      leaveDay = leaveDate.day;
-    }
-
-    for (int day = 1; day <= daysInMonth; day++) {
-      final date = DateTime(month.year, month.month, day);
-      Attendance? attendance = row.attendances[day];
-
-      if (leaveDay != null && leaveDay <= day) {
-        attendance = null;
+      final leaveDate = row.employee.leaveDate;
+      int? leaveDay;
+      if (leaveDate != null &&
+          leaveDate.year == month.year &&
+          leaveDate.month == month.month) {
+        leaveDay = leaveDate.day;
       }
 
-      final status = attendance?.status;
-      final diff = _attendService.calcTimeDiff(attendance);
+      for (int day = 1; day <= daysInMonth; day++) {
+        final date = DateTime(month.year, month.month, day);
+        Attendance? attendance = row.attendances[day];
 
-      List<Duration> weekSum = [];
-      if (diff != null) {
-        if (!diff.isNegative) {
-          weekSupp += diff;
-        } else {
-          weekRecup += diff;
+        if (leaveDay != null && leaveDay <= day) {
+          attendance = null;
         }
-      } else if (date.weekday == DateTime.sunday) {
-        weekSum.addAll([weekRecup, weekSupp]);
-        weekRecup = weekSupp = .zero;
+
+        final status = attendance?.status;
+        final diff = _attendService.calcTimeDiff(attendance);
+
+        List<Duration> weekSum = [];
+        if (diff != null) {
+          if (!diff.isNegative) {
+            weekSupp += diff;
+          } else {
+            weekRecup += diff;
+          }
+        } else if (date.weekday == DateTime.sunday) {
+          weekSum.addAll([weekRecup, weekSupp]);
+          weekRecup = weekSupp = .zero;
+        }
+
+        if (status == .r) rDays += status!.dayValue(date);
+        if (status == .c) cDays += status!.dayValue(date);
+
+        days.add(
+          _DayData(
+            day: day,
+            date: date,
+            attendance: attendance,
+            diff: diff,
+            weekSum: weekSum,
+            isLeaveDate: leaveDay == day,
+          ),
+        );
       }
+      final collected = row.employee.collected;
 
-      if (status == .r) rDays += status!.dayValue(date);
-      if (status == .c) cDays += status!.dayValue(date);
-
-      days.add(
-        _DayData(
-          day: day,
-          date: date,
-          attendance: attendance,
-          diff: diff,
-          weekSum: weekSum,
-          isLeaveDate: leaveDay == day,
+      pdf.addPage(
+        pw.Page(
+          pageFormat: PdfPageFormat.a4,
+          margin: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 20),
+          build: (pw.Context context) {
+            return pw.Column(
+              crossAxisAlignment: .stretch,
+              children: [
+                pw.Text(
+                  row.employee.collected.formatTime(),
+                  style: _collectedStyle,
+                  textAlign: .center,
+                ),
+                pw.SizedBox(height: 6),
+                _buildPageHeader(row.employee, month),
+                pw.SizedBox(height: 6),
+                pw.Table(
+                  border: pw.TableBorder.all(width: 0.5),
+                  columnWidths: _columns(),
+                  children: [
+                    _buildColumnHeaders(),
+                    ...days.map((d) => _buildDayRow(d)),
+                    _buildTotalRow(days, weekSupp + weekRecup, collected),
+                  ],
+                ),
+                pw.SizedBox(height: 16),
+                _buildSignatureRow(rDays, cDays),
+              ],
+            );
+          },
         ),
       );
     }
-    final collected = row.employee.collected;
-
-    pdf.addPage(
-      pw.Page(
-        pageFormat: PdfPageFormat.a4,
-        margin: const pw.EdgeInsets.symmetric(horizontal: 16, vertical: 20),
-        build: (pw.Context context) {
-          return pw.Column(
-            crossAxisAlignment: .stretch,
-            children: [
-              pw.Text(
-                row.employee.collected.formatTime(),
-                style: _collectedStyle,
-                textAlign: .center,
-              ),
-              pw.SizedBox(height: 6),
-              _buildPageHeader(row.employee, month),
-              pw.SizedBox(height: 6),
-              pw.Table(
-                border: pw.TableBorder.all(width: 0.5),
-                columnWidths: _columns(),
-                children: [
-                  _buildColumnHeaders(),
-                  ...days.map((d) => _buildDayRow(d)),
-                  _buildTotalRow(days, weekSupp + weekRecup, collected),
-                ],
-              ),
-              pw.SizedBox(height: 16),
-              _buildSignatureRow(rDays, cDays),
-            ],
-          );
-        },
-      ),
-    );
-
     return pdf.save();
   }
 
