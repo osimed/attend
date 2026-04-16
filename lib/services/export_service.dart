@@ -262,6 +262,7 @@ class ExportService {
 
     final statusColor = status?.color?.toARGB32();
     final color = statusColor != null ? PdfColor.fromInt(statusColor) : null;
+    final isLunchBreak = (d.attendance?.lunchBreak ?? true);
 
     return pw.TableRow(
       decoration: pw.BoxDecoration(color: bg),
@@ -288,12 +289,20 @@ class ExportService {
         _dataCell(
           isWeekTotal ? d.weekSum.last.formatTime() : suppStr,
           align: .center,
-          style: isWeekTotal ? _weekTotalStyle : null,
+          style: isWeekTotal
+              ? _weekTotalStyle
+              : _cellStyle.copyWith(
+                  decoration: !isLunchBreak ? .underline : null,
+                ),
         ),
         _dataCell(
           isWeekTotal ? d.weekSum.first.formatTime() : recupStr,
           align: .center,
-          style: isWeekTotal ? _weekTotalStyle : null,
+          style: isWeekTotal
+              ? _weekTotalStyle
+              : _cellStyle.copyWith(
+                  decoration: !isLunchBreak ? .underline : null,
+                ),
         ),
         _dataCell(
           isWeekTotal ? restant.formatTime() : '',
