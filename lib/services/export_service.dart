@@ -54,9 +54,22 @@ class ExportService {
     double rDays = 0.0;
     double cDays = 0.0;
 
+    final leaveDate = row.employee.leaveDate;
+    int? leaveDay;
+    if (leaveDate != null &&
+        leaveDate.year == month.year &&
+        leaveDate.month == month.month) {
+      leaveDay = leaveDate.day;
+    }
+
     for (int day = 1; day <= daysInMonth; day++) {
       final date = DateTime(month.year, month.month, day);
-      final attendance = row.attendances[day];
+      Attendance? attendance = row.attendances[day];
+
+      if (leaveDay != null && leaveDay <= day) {
+        attendance = null;
+      }
+
       final status = attendance?.status;
       final diff = _attendService.calcTimeDiff(attendance);
 
@@ -82,6 +95,7 @@ class ExportService {
           attendance: attendance,
           diff: diff,
           weekSum: weekSum,
+          isLeaveDate: leaveDay == day,
         ),
       );
     }
@@ -189,6 +203,24 @@ class ExportService {
   }
 
   pw.TableRow _buildDayRow(_DayData d) {
+    if (d.isLeaveDate) {
+      return pw.TableRow(
+        children: [
+          _dataCell(
+            d.day.toString(),
+            style: _boldCellStyle,
+            align: pw.Alignment.center,
+          ),
+          for (int i = 0; i < 7; i++)
+            _dataCell(
+              'DEMISSION',
+              style: _statusStyle,
+              align: pw.Alignment.center,
+            ),
+        ],
+      );
+    }
+
     final isWeekTotal = d.weekSum.isNotEmpty;
     final bg = isWeekTotal ? PdfColors.grey200 : PdfColors.white;
     final status = d.attendance?.status;
@@ -276,7 +308,11 @@ class ExportService {
     );
   }
 
-  pw.TableRow _buildTotalRow(List<_DayData> days, Duration leftover, Duration collected) {
+  pw.TableRow _buildTotalRow(
+    List<_DayData> days,
+    Duration leftover,
+    Duration collected,
+  ) {
     Duration total = leftover;
     for (final day in days) {
       if (day.weekSum.isNotEmpty) {
@@ -358,6 +394,7 @@ class _DayData {
   final Attendance? attendance;
   final Duration? diff;
   final List<Duration> weekSum;
+  final bool isLeaveDate;
 
   _DayData({
     required this.day,
@@ -365,5 +402,6 @@ class _DayData {
     required this.attendance,
     required this.diff,
     required this.weekSum,
+    required this.isLeaveDate,
   });
 }
