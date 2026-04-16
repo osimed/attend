@@ -46,6 +46,8 @@ enum Status {
       .r => Colors.tealAccent.shade700,
       .j => Colors.blueAccent.shade100,
       .m => Colors.lime.shade600,
+      .ac => Colors.pink.shade200,
+      .dc => Colors.brown.shade200,
       _ => null,
     };
   }
