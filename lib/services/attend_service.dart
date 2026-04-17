@@ -29,6 +29,13 @@ class AttendService {
     return _database.layoffEmployee(employeeId, date);
   }
 
+  Future<Map<int, List<Attendance>>> getAttendancesUpToMonth(
+    Team team,
+    DateTime month,
+  ) async {
+    return _database.getAttendancesUpToMonth(team, month);
+  }
+
   Duration? calcTimeDiff(Attendance? attendance) {
     if (attendance == null) return null;
     final date = attendance.date;
@@ -60,6 +67,15 @@ class AttendService {
       return worked - const Duration(hours: 8);
     }
     return worked;
+  }
+
+  Duration calcCollected(List<Attendance>? prevAttn) {
+    if (prevAttn == null) return .zero;
+    Duration total = .zero;
+    for (final attn in prevAttn) {
+      total += calcTimeDiff(attn) ?? .zero;
+    }
+    return total;
   }
 }
 

@@ -178,6 +178,32 @@ class AppDatabase extends _$AppDatabase {
     return calendar.values.toList();
   }
 
+  Future<Map<int, List<Attendance>>> getAttendancesUpToMonth(
+    Team team,
+    DateTime month,
+  ) async {
+    final query = select(employeeTable).join([
+      leftOuterJoin(
+        attendanceTable,
+        attendanceTable.employeeId.equalsExp(employeeTable.id) &
+            attendanceTable.date.isSmallerThanValue(month),
+      ),
+    ]);
+    query.where(employeeTable.team.equalsValue(team));
+
+    final result = await query.get();
+    final attns = <int, List<Attendance>>{};
+
+    for (final row in result) {
+      final empl = row.readTable(employeeTable);
+      final attn = row.readTableOrNull(attendanceTable);
+
+      final entry = attns.putIfAbsent(empl.id, () => []);
+      if (attn != null) entry.add(attn);
+    }
+    return attns;
+  }
+
   Future<void> saveAttendance(Attendance attendance) async {
     attendanceTable.insertOnConflictUpdate(
       AttendanceTableCompanion(

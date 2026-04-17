@@ -42,12 +42,12 @@ class ExportService {
 
   ExportService(this._attendService);
 
-  Future<Uint8List> genTeamPdf(
-    List<CalendarRow> rows,
-    DateTime month,
-  ) async {
+  Future<Uint8List> genTeamPdf(List<CalendarRow> rows, DateTime month) async {
     final pdf = pw.Document();
     final daysInMonth = DateUtils.getDaysInMonth(month.year, month.month);
+
+    final team = rows.first.employee.team;
+    final prevAttns = await _attendService.getAttendancesUpToMonth(team, month);
 
     for (final row in rows) {
       final List<_DayData> days = [];
@@ -84,7 +84,10 @@ class ExportService {
           } else {
             weekRecup += diff;
           }
-        } else if (date.weekday == DateTime.sunday) {
+        }
+        final isSunday = date.weekday == DateTime.sunday;
+        final isFilled = attendance?.status == .p;
+        if (isSunday && !isFilled) {
           weekSum.addAll([weekRecup, weekSupp]);
           weekRecup = weekSupp = .zero;
         }
@@ -103,7 +106,11 @@ class ExportService {
           ),
         );
       }
-      final collected = row.employee.collected;
+      final initCollected = row.employee.collected;
+      final prevCollected = _attendService.calcCollected(
+        prevAttns[row.employee.id],
+      );
+      final collected = prevCollected + initCollected;
 
       pdf.addPage(
         pw.Page(
@@ -114,7 +121,7 @@ class ExportService {
               crossAxisAlignment: .stretch,
               children: [
                 pw.Text(
-                  row.employee.collected.formatTime(),
+                  collected.formatTime(),
                   style: _collectedStyle,
                   textAlign: .center,
                 ),
