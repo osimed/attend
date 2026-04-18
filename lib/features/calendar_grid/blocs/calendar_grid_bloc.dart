@@ -11,6 +11,7 @@ class CalendarGridBloc extends Bloc<CalendarGridEvent, CalendarGridState> {
     on<LoadMonthlyCalendar>(_onLoadMonthlyCalendar);
     on<RefreshCalendarCell>(_onRefreshCalendarCell);
     on<CalcAttendanceDiff>(_onCalcAttendanceDiff);
+    on<BulkSaveAttendances>(_onBulkSaveAttendances);
   }
 
   Future<void> _onLoadMonthlyCalendar(
@@ -63,6 +64,36 @@ class CalendarGridBloc extends Bloc<CalendarGridEvent, CalendarGridState> {
         calendar: state.calendar,
         cell: event.cell,
         diff: diff,
+      ),
+    );
+  }
+
+  Future<void> _onBulkSaveAttendances(
+    BulkSaveAttendances event,
+    Emitter<CalendarGridState> emit,
+  ) async {
+    for (final row in state.calendar) {
+      final ld = row.employee.leaveDate;
+      if (ld != null && event.date.isAfter(ld)) {
+        continue;
+      }
+      await _attendService.saveAttendance(
+        Attendance(
+          employeeId: row.employee.id,
+          date: event.date,
+          status: event.template.status,
+          enter: event.template.enter,
+          leave: event.template.leave,
+          lunchBreak: event.template.lunchBreak,
+        ),
+      );
+    }
+    final calendar = await _attendService.loadCalendar(state.month, state.team);
+    emit(
+      MonthlyCalendarLoaded(
+        team: state.team,
+        month: state.month,
+        calendar: calendar,
       ),
     );
   }

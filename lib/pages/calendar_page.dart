@@ -34,6 +34,15 @@ class CalendarPage extends StatelessWidget {
             RefreshCalendarCell(attendance: state.attendance, cell: state.cell),
           );
         }
+        if (state is BulkDaySaved) {
+          context.read<CalendarGridBloc>().add(
+            BulkSaveAttendances(
+              day: state.day,
+              date: state.date,
+              template: state.attendance,
+            ),
+          );
+        }
       },
       child: Scaffold(
         appBar: AppBar(

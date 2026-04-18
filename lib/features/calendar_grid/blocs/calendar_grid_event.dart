@@ -23,3 +23,15 @@ class CalcAttendanceDiff extends CalendarGridEvent {
 
   CalcAttendanceDiff({required this.cell});
 }
+
+class BulkSaveAttendances extends CalendarGridEvent {
+  final int day;
+  final DateTime date;
+  final Attendance template;
+
+  BulkSaveAttendances({
+    required this.day,
+    required this.date,
+    required this.template,
+  });
+}

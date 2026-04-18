@@ -1,3 +1,4 @@
+import 'package:attend/database/database.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_state.dart';
 import 'package:attend/services/attend_service.dart';
@@ -16,6 +17,8 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
     on<LayoffEmployee>(_onLayoffEmployee);
     on<SelectAttendance>(_onSelectAttendance);
     on<SaveAttendance>(_onSaveAttendance);
+    on<BulkSelectDay>(_onBulkSelectDay);
+    on<BulkSaveDay>(_onBulkSaveDay);
   }
   Future<void> _onCloseHeaderPanel(
     CloseHeaderPanel event,
@@ -32,6 +35,13 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
         isOpen: false,
         month: s.month,
         cell: s.cell,
+        attendance: s.attendance,
+      ),
+      EditingBulkDay s => EditingBulkDay(
+        isOpen: false,
+        month: s.month,
+        day: s.day,
+        date: s.date,
         attendance: s.attendance,
       ),
     });
@@ -129,6 +139,45 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
         month: state.month,
         attendance: event.attendance,
         cell: event.cell,
+      ),
+    );
+  }
+
+  Future<void> _onBulkSelectDay(
+    BulkSelectDay event,
+    Emitter<HeaderPanelState> emit,
+  ) async {
+    final isOpen =
+        state is EditingBulkDay &&
+        state.isOpen &&
+        (state as EditingBulkDay).day == event.day;
+    emit(
+      EditingBulkDay(
+        isOpen: !isOpen,
+        month: state.month,
+        day: event.day,
+        date: event.date,
+        attendance: Attendance(
+          employeeId: -1,
+          date: event.date,
+          status: .empty,
+          lunchBreak: true,
+        ),
+      ),
+    );
+  }
+
+  Future<void> _onBulkSaveDay(
+    BulkSaveDay event,
+    Emitter<HeaderPanelState> emit,
+  ) async {
+    emit(
+      BulkDaySaved(
+        isOpen: state.isOpen,
+        month: state.month,
+        day: event.day,
+        date: event.date,
+        attendance: event.attendance,
       ),
     );
   }

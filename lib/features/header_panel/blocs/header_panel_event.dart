@@ -50,3 +50,22 @@ class SaveAttendance extends HeaderPanelEvent {
 
   SaveAttendance({required this.cell, required this.attendance});
 }
+
+class BulkSelectDay extends HeaderPanelEvent {
+  final int day;
+  final DateTime date;
+
+  BulkSelectDay({required this.day, required this.date});
+}
+
+class BulkSaveDay extends HeaderPanelEvent {
+  final int day;
+  final DateTime date;
+  final Attendance attendance;
+
+  BulkSaveDay({
+    required this.day,
+    required this.date,
+    required this.attendance,
+  });
+}

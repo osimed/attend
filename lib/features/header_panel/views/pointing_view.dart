@@ -9,7 +9,7 @@ import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart'
     show TableVicinity;
 
 class PointingView extends StatelessWidget {
-  final TableVicinity cell;
+  final TableVicinity? cell;
   final Attendance attendance;
 
   const PointingView({super.key, required this.cell, required this.attendance});
@@ -28,7 +28,7 @@ class PointingView extends StatelessWidget {
                 children: [
                   SizedBox(width: 240, child: buildTimeSelector(context)),
                   Flexible(child: buildStatusSelector(context)),
-                  buildEmployeeLayoffButton(context),
+                  if (cell != null) buildEmployeeLayoffButton(context),
                 ],
               ),
             );
@@ -42,7 +42,7 @@ class PointingView extends StatelessWidget {
                   child: Row(
                     children: [
                       Flexible(child: buildTimeSelector(context)),
-                      buildEmployeeLayoffButton(context),
+                      if (cell != null) buildEmployeeLayoffButton(context),
                     ],
                   ),
                 ),
@@ -68,7 +68,17 @@ class PointingView extends StatelessWidget {
                 status: .p,
                 lunchBreak: !attendance.lunchBreak,
               );
-              bloc.add(SaveAttendance(cell: cell, attendance: newAtt));
+              if (cell != null) {
+                bloc.add(SaveAttendance(cell: cell!, attendance: newAtt));
+              } else {
+                bloc.add(
+                  BulkSaveDay(
+                    day: newAtt.date.day,
+                    date: newAtt.date,
+                    attendance: newAtt,
+                  ),
+                );
+              }
             },
             style: FilledButton.styleFrom(
               padding: .zero,
@@ -116,7 +126,17 @@ class PointingView extends StatelessWidget {
         if (enter == null) return;
 
         final newAtt = attendance.copyWith(status: .p, enter: Value(enter));
-        bloc.add(SaveAttendance(cell: cell, attendance: newAtt));
+        if (cell != null) {
+          bloc.add(SaveAttendance(cell: cell!, attendance: newAtt));
+        } else {
+          bloc.add(
+            BulkSaveDay(
+              day: newAtt.date.day,
+              date: newAtt.date,
+              attendance: newAtt,
+            ),
+          );
+        }
       },
       child: Text(
         attendance.enter?.displayTime() ?? '--:--',
@@ -150,7 +170,17 @@ class PointingView extends StatelessWidget {
         if (leave == null) return;
 
         final newAtt = attendance.copyWith(status: .p, leave: Value(leave));
-        bloc.add(SaveAttendance(cell: cell, attendance: newAtt));
+        if (cell != null) {
+          bloc.add(SaveAttendance(cell: cell!, attendance: newAtt));
+        } else {
+          bloc.add(
+            BulkSaveDay(
+              day: newAtt.date.day,
+              date: newAtt.date,
+              attendance: newAtt,
+            ),
+          );
+        }
       },
       child: Text(
         attendance.leave?.displayTime() ?? '--:--',
@@ -173,17 +203,24 @@ class PointingView extends StatelessWidget {
             if (status != .empty && status != .p)
               TextButton(
                 onPressed: () {
-                  context.read<HeaderPanelBloc>().add(
-                    SaveAttendance(
-                      cell: cell,
-                      attendance: attendance.copyWith(
-                        status: status,
-                        enter: const Value(null),
-                        leave: const Value(null),
-                        lunchBreak: true,
-                      ),
-                    ),
+                  final bloc = context.read<HeaderPanelBloc>();
+                  final newAtt = attendance.copyWith(
+                    status: status,
+                    enter: const Value(null),
+                    leave: const Value(null),
+                    lunchBreak: true,
                   );
+                  if (cell != null) {
+                    bloc.add(SaveAttendance(cell: cell!, attendance: newAtt));
+                  } else {
+                    bloc.add(
+                      BulkSaveDay(
+                        day: newAtt.date.day,
+                        date: newAtt.date,
+                        attendance: newAtt,
+                      ),
+                    );
+                  }
                 },
                 style: TextButton.styleFrom(
                   shape: RoundedRectangleBorder(

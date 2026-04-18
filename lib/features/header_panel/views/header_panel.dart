@@ -35,6 +35,11 @@ class HeaderPanel extends StatelessWidget {
                 attendance: state.attendance,
               ),
             ),
+            EditingBulkDay state => SizedBox(
+              width: double.infinity,
+              height: state.isOpen ? null : 0,
+              child: PointingView(cell: null, attendance: state.attendance),
+            ),
           };
         },
       ),

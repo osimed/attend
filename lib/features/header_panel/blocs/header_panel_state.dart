@@ -51,3 +51,27 @@ class AttendanceSaved extends EditingAttendance {
     required super.attendance,
   });
 }
+
+class EditingBulkDay extends HeaderPanelState {
+  final int day;
+  final DateTime date;
+  final Attendance attendance;
+
+  const EditingBulkDay({
+    required super.month,
+    super.isOpen,
+    required this.day,
+    required this.date,
+    required this.attendance,
+  });
+}
+
+class BulkDaySaved extends EditingBulkDay {
+  const BulkDaySaved({
+    required super.month,
+    super.isOpen,
+    required super.day,
+    required super.date,
+    required super.attendance,
+  });
+}
