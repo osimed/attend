@@ -103,7 +103,11 @@ class HeaderPanelBloc extends Bloc<HeaderPanelEvent, HeaderPanelState> {
     LayoffEmployee event,
     Emitter<HeaderPanelState> emit,
   ) async {
-    await _attendService.layoffEmployee(event.employeeId, event.left);
+    await _attendService.layoffEmployee(
+      event.employeeId,
+      event.left,
+      event.reason,
+    );
     emit(EmployeeLaidOff(month: state.month, isOpen: false));
   }
 

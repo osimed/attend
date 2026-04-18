@@ -18,24 +18,24 @@ Map<int, pw.TableColumnWidth> _columns() => {
   7: const pw.FlexColumnWidth(0.15), // EXPLICATION
 };
 
-final _headerStyle = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
+const _headerStyle = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
 
 const _cellStyle = pw.TextStyle(fontSize: 8);
 
-final _boldCellStyle = pw.TextStyle(fontSize: 10, fontWeight: .bold);
+const _boldCellStyle = pw.TextStyle(fontSize: 10, fontWeight: .bold);
 
-final _collectedStyle = pw.TextStyle(fontSize: 17, fontWeight: .bold);
+const _collectedStyle = pw.TextStyle(fontSize: 17, fontWeight: .bold);
 
 final _statusStyle = pw.TextStyle(fontSize: 10, font: pw.Font.courier());
 
-final _weekTotalStyle = pw.TextStyle(fontSize: 8, fontWeight: .bold);
+const _weekTotalStyle = pw.TextStyle(fontSize: 8, fontWeight: .bold);
 
 final _statusPadding = const pw.EdgeInsets.symmetric(
   horizontal: 5,
   vertical: 1,
 );
 
-final _totalStyle = pw.TextStyle(fontSize: 8, fontWeight: .bold);
+const _totalStyle = pw.TextStyle(fontSize: 8, fontWeight: .bold);
 
 class ExportService {
   final AttendService _attendService;
@@ -59,6 +59,7 @@ class ExportService {
       double cDays = 0.0;
 
       final leaveDate = row.employee.leaveDate;
+      final leaveReason = row.employee.leaveReason;
       int? leaveDay;
       if (leaveDate != null &&
           leaveDate.year == month.year &&
@@ -103,6 +104,7 @@ class ExportService {
             diff: diff,
             weekSum: weekSum,
             isLeaveDate: leaveDay == day,
+            leaveReason: leaveReason?.fullname ?? '',
           ),
         );
       }
@@ -149,11 +151,11 @@ class ExportService {
   }
 
   pw.Widget _buildPageHeader(Employee employee, DateTime month) {
-    final labelStyle = pw.TextStyle(
+    const labelStyle = pw.TextStyle(
       fontSize: 7,
       fontWeight: pw.FontWeight.bold,
     );
-    final valueStyle = pw.TextStyle(
+    const valueStyle = pw.TextStyle(
       fontSize: 9,
       fontWeight: pw.FontWeight.bold,
     );
@@ -222,12 +224,15 @@ class ExportService {
             style: _boldCellStyle,
             align: pw.Alignment.center,
           ),
-          for (int i = 0; i < 7; i++)
-            _dataCell(
-              'DEMISSION',
+          pw.TableCell(
+            columnSpan: 6,
+            child: _dataCell(
+              d.leaveReason,
               style: _statusStyle,
               align: pw.Alignment.center,
             ),
+          ),
+          _dataCell(''),
         ],
       );
     }
@@ -359,7 +364,7 @@ class ExportService {
   }
 
   pw.Widget _buildSignatureRow(double rDays, double cDays) {
-    final style = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
+    const style = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
     return pw.Row(
       children: [
         pw.Expanded(child: pw.Text('Chef signature', style: style)),
@@ -415,6 +420,7 @@ class _DayData {
   final Duration? diff;
   final List<Duration> weekSum;
   final bool isLeaveDate;
+  final String leaveReason;
 
   _DayData({
     required this.day,
@@ -423,5 +429,6 @@ class _DayData {
     required this.diff,
     required this.weekSum,
     required this.isLeaveDate,
+    required this.leaveReason,
   });
 }

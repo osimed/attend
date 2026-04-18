@@ -81,6 +81,20 @@ enum Team {
   }
 }
 
+enum LeaveReason {
+  resignation,
+  termination,
+  abandonment;
+
+  String get fullname {
+    return switch (this) {
+      .resignation => 'DÉMISSION',
+      .abandonment => 'ABANDON DE POSTE',
+      .termination => 'ARRÊT DU CONTRAT',
+    };
+  }
+}
+
 @DataClassName('Employee')
 class EmployeeTable extends Table {
   IntColumn get id => integer().autoIncrement()();
@@ -91,6 +105,7 @@ class EmployeeTable extends Table {
   IntColumn get collected =>
       integer().map(const DurationConverter()).withDefault(const Constant(0))();
   DateTimeColumn get leaveDate => dateTime().nullable()();
+  TextColumn get leaveReason => textEnum<LeaveReason>().nullable()();
 }
 
 class DurationConverter extends TypeConverter<Duration, int> {
@@ -126,7 +141,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 3;
+  int get schemaVersion => 4;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -137,6 +152,14 @@ class AppDatabase extends _$AppDatabase {
       }
       if (from < 3) {
         await m.addColumn(employeeTable, employeeTable.job);
+      }
+      if (from < 4) {
+        await m.addColumn(employeeTable, employeeTable.leaveReason);
+        final stmt = """
+          UPDATE employee_table SET leave_reason = 'resignation'
+          WHERE leave_date IS NOT NULL
+        """;
+        await customStatement(stmt);
       }
     },
     beforeOpen: (d) async {
@@ -235,10 +258,19 @@ class AppDatabase extends _$AppDatabase {
     return employeeTable.deleteOne(employee);
   }
 
-  Future<void> layoffEmployee(int employeeId, DateTime? date) async {
+  Future<void> layoffEmployee(
+    int employeeId,
+    DateTime? date,
+    LeaveReason? reason,
+  ) async {
     final query = employeeTable.update()
       ..where((empl) => empl.id.equals(employeeId));
-    await query.write(EmployeeTableCompanion(leaveDate: Value(date)));
+    await query.write(
+      EmployeeTableCompanion(
+        leaveDate: Value(date),
+        leaveReason: Value(reason),
+      ),
+    );
   }
 
   static QueryExecutor _openConnection() {

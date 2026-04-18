@@ -25,8 +25,12 @@ class AttendService {
     return _database.deleteEmployee(employee);
   }
 
-  Future<void> layoffEmployee(int employeeId, DateTime? date) async {
-    return _database.layoffEmployee(employeeId, date);
+  Future<void> layoffEmployee(
+    int employeeId,
+    DateTime? date,
+    LeaveReason? reason,
+  ) async {
+    return _database.layoffEmployee(employeeId, date, reason);
   }
 
   Future<Map<int, List<Attendance>>> getAttendancesUpToMonth(

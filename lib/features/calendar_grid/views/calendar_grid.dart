@@ -67,6 +67,7 @@ class CalendarGrid extends StatelessWidget {
               );
             }
             final lDate = entry.employee.leaveDate;
+            final lReason = entry.employee.leaveReason;
             final isLeave =
                 lDate != null &&
                 lDate.year == state.month.year &&
@@ -79,12 +80,16 @@ class CalendarGrid extends StatelessWidget {
                 child: GestureDetector(
                   onLongPress: () {
                     context.read<HeaderPanelBloc>().add(
-                      LayoffEmployee(employeeId: entry.employee.id, left: null),
+                      LayoffEmployee(
+                        employeeId: entry.employee.id,
+                        left: null,
+                        reason: null,
+                      ),
                     );
                   },
                   child: CustomPaint(
                     painter: TextBannerPainter(
-                      text: 'DEMISSION',
+                      text: lReason!.fullname,
                       color: textColor,
                     ),
                   ),

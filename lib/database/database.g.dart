@@ -85,6 +85,15 @@ class $EmployeeTableTable extends EmployeeTable
     requiredDuringInsert: false,
   );
   @override
+  late final GeneratedColumnWithTypeConverter<LeaveReason?, String>
+  leaveReason = GeneratedColumn<String>(
+    'leave_reason',
+    aliasedName,
+    true,
+    type: DriftSqlType.string,
+    requiredDuringInsert: false,
+  ).withConverter<LeaveReason?>($EmployeeTableTable.$converterleaveReasonn);
+  @override
   List<GeneratedColumn> get $columns => [
     id,
     firstName,
@@ -93,6 +102,7 @@ class $EmployeeTableTable extends EmployeeTable
     job,
     collected,
     leaveDate,
+    leaveReason,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -178,6 +188,12 @@ class $EmployeeTableTable extends EmployeeTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}leave_date'],
       ),
+      leaveReason: $EmployeeTableTable.$converterleaveReasonn.fromSql(
+        attachedDatabase.typeMapping.read(
+          DriftSqlType.string,
+          data['${effectivePrefix}leave_reason'],
+        ),
+      ),
     );
   }
 
@@ -190,6 +206,10 @@ class $EmployeeTableTable extends EmployeeTable
       const EnumNameConverter<Team>(Team.values);
   static TypeConverter<Duration, int> $convertercollected =
       const DurationConverter();
+  static JsonTypeConverter2<LeaveReason, String, String> $converterleaveReason =
+      const EnumNameConverter<LeaveReason>(LeaveReason.values);
+  static JsonTypeConverter2<LeaveReason?, String?, String?>
+  $converterleaveReasonn = JsonTypeConverter2.asNullable($converterleaveReason);
 }
 
 class Employee extends DataClass implements Insertable<Employee> {
@@ -200,6 +220,7 @@ class Employee extends DataClass implements Insertable<Employee> {
   final String job;
   final Duration collected;
   final DateTime? leaveDate;
+  final LeaveReason? leaveReason;
   const Employee({
     required this.id,
     required this.firstName,
@@ -208,6 +229,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     required this.job,
     required this.collected,
     this.leaveDate,
+    this.leaveReason,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -229,6 +251,11 @@ class Employee extends DataClass implements Insertable<Employee> {
     if (!nullToAbsent || leaveDate != null) {
       map['leave_date'] = Variable<DateTime>(leaveDate);
     }
+    if (!nullToAbsent || leaveReason != null) {
+      map['leave_reason'] = Variable<String>(
+        $EmployeeTableTable.$converterleaveReasonn.toSql(leaveReason),
+      );
+    }
     return map;
   }
 
@@ -243,6 +270,9 @@ class Employee extends DataClass implements Insertable<Employee> {
       leaveDate: leaveDate == null && nullToAbsent
           ? const Value.absent()
           : Value(leaveDate),
+      leaveReason: leaveReason == null && nullToAbsent
+          ? const Value.absent()
+          : Value(leaveReason),
     );
   }
 
@@ -261,6 +291,9 @@ class Employee extends DataClass implements Insertable<Employee> {
       job: serializer.fromJson<String>(json['job']),
       collected: serializer.fromJson<Duration>(json['collected']),
       leaveDate: serializer.fromJson<DateTime?>(json['leaveDate']),
+      leaveReason: $EmployeeTableTable.$converterleaveReasonn.fromJson(
+        serializer.fromJson<String?>(json['leaveReason']),
+      ),
     );
   }
   @override
@@ -276,6 +309,9 @@ class Employee extends DataClass implements Insertable<Employee> {
       'job': serializer.toJson<String>(job),
       'collected': serializer.toJson<Duration>(collected),
       'leaveDate': serializer.toJson<DateTime?>(leaveDate),
+      'leaveReason': serializer.toJson<String?>(
+        $EmployeeTableTable.$converterleaveReasonn.toJson(leaveReason),
+      ),
     };
   }
 
@@ -287,6 +323,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     String? job,
     Duration? collected,
     Value<DateTime?> leaveDate = const Value.absent(),
+    Value<LeaveReason?> leaveReason = const Value.absent(),
   }) => Employee(
     id: id ?? this.id,
     firstName: firstName ?? this.firstName,
@@ -295,6 +332,7 @@ class Employee extends DataClass implements Insertable<Employee> {
     job: job ?? this.job,
     collected: collected ?? this.collected,
     leaveDate: leaveDate.present ? leaveDate.value : this.leaveDate,
+    leaveReason: leaveReason.present ? leaveReason.value : this.leaveReason,
   );
   Employee copyWithCompanion(EmployeeTableCompanion data) {
     return Employee(
@@ -305,6 +343,9 @@ class Employee extends DataClass implements Insertable<Employee> {
       job: data.job.present ? data.job.value : this.job,
       collected: data.collected.present ? data.collected.value : this.collected,
       leaveDate: data.leaveDate.present ? data.leaveDate.value : this.leaveDate,
+      leaveReason: data.leaveReason.present
+          ? data.leaveReason.value
+          : this.leaveReason,
     );
   }
 
@@ -317,14 +358,23 @@ class Employee extends DataClass implements Insertable<Employee> {
           ..write('team: $team, ')
           ..write('job: $job, ')
           ..write('collected: $collected, ')
-          ..write('leaveDate: $leaveDate')
+          ..write('leaveDate: $leaveDate, ')
+          ..write('leaveReason: $leaveReason')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(id, firstName, lastName, team, job, collected, leaveDate);
+  int get hashCode => Object.hash(
+    id,
+    firstName,
+    lastName,
+    team,
+    job,
+    collected,
+    leaveDate,
+    leaveReason,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -335,7 +385,8 @@ class Employee extends DataClass implements Insertable<Employee> {
           other.team == this.team &&
           other.job == this.job &&
           other.collected == this.collected &&
-          other.leaveDate == this.leaveDate);
+          other.leaveDate == this.leaveDate &&
+          other.leaveReason == this.leaveReason);
 }
 
 class EmployeeTableCompanion extends UpdateCompanion<Employee> {
@@ -346,6 +397,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
   final Value<String> job;
   final Value<Duration> collected;
   final Value<DateTime?> leaveDate;
+  final Value<LeaveReason?> leaveReason;
   const EmployeeTableCompanion({
     this.id = const Value.absent(),
     this.firstName = const Value.absent(),
@@ -354,6 +406,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
     this.job = const Value.absent(),
     this.collected = const Value.absent(),
     this.leaveDate = const Value.absent(),
+    this.leaveReason = const Value.absent(),
   });
   EmployeeTableCompanion.insert({
     this.id = const Value.absent(),
@@ -363,6 +416,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
     this.job = const Value.absent(),
     this.collected = const Value.absent(),
     this.leaveDate = const Value.absent(),
+    this.leaveReason = const Value.absent(),
   }) : firstName = Value(firstName),
        lastName = Value(lastName),
        team = Value(team);
@@ -374,6 +428,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
     Expression<String>? job,
     Expression<int>? collected,
     Expression<DateTime>? leaveDate,
+    Expression<String>? leaveReason,
   }) {
     return RawValuesInsertable({
       if (id != null) 'id': id,
@@ -383,6 +438,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
       if (job != null) 'job': job,
       if (collected != null) 'collected': collected,
       if (leaveDate != null) 'leave_date': leaveDate,
+      if (leaveReason != null) 'leave_reason': leaveReason,
     });
   }
 
@@ -394,6 +450,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
     Value<String>? job,
     Value<Duration>? collected,
     Value<DateTime?>? leaveDate,
+    Value<LeaveReason?>? leaveReason,
   }) {
     return EmployeeTableCompanion(
       id: id ?? this.id,
@@ -403,6 +460,7 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
       job: job ?? this.job,
       collected: collected ?? this.collected,
       leaveDate: leaveDate ?? this.leaveDate,
+      leaveReason: leaveReason ?? this.leaveReason,
     );
   }
 
@@ -434,6 +492,11 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
     if (leaveDate.present) {
       map['leave_date'] = Variable<DateTime>(leaveDate.value);
     }
+    if (leaveReason.present) {
+      map['leave_reason'] = Variable<String>(
+        $EmployeeTableTable.$converterleaveReasonn.toSql(leaveReason.value),
+      );
+    }
     return map;
   }
 
@@ -446,7 +509,8 @@ class EmployeeTableCompanion extends UpdateCompanion<Employee> {
           ..write('team: $team, ')
           ..write('job: $job, ')
           ..write('collected: $collected, ')
-          ..write('leaveDate: $leaveDate')
+          ..write('leaveDate: $leaveDate, ')
+          ..write('leaveReason: $leaveReason')
           ..write(')'))
         .toString();
   }
@@ -930,6 +994,7 @@ typedef $$EmployeeTableTableCreateCompanionBuilder =
       Value<String> job,
       Value<Duration> collected,
       Value<DateTime?> leaveDate,
+      Value<LeaveReason?> leaveReason,
     });
 typedef $$EmployeeTableTableUpdateCompanionBuilder =
     EmployeeTableCompanion Function({
@@ -940,6 +1005,7 @@ typedef $$EmployeeTableTableUpdateCompanionBuilder =
       Value<String> job,
       Value<Duration> collected,
       Value<DateTime?> leaveDate,
+      Value<LeaveReason?> leaveReason,
     });
 
 final class $$EmployeeTableTableReferences
@@ -1020,6 +1086,12 @@ class $$EmployeeTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
+  ColumnWithTypeConverterFilters<LeaveReason?, LeaveReason, String>
+  get leaveReason => $composableBuilder(
+    column: $table.leaveReason,
+    builder: (column) => ColumnWithTypeConverterFilters(column),
+  );
+
   Expression<bool> attendanceTableRefs(
     Expression<bool> Function($$AttendanceTableTableFilterComposer f) f,
   ) {
@@ -1089,6 +1161,11 @@ class $$EmployeeTableTableOrderingComposer
     column: $table.leaveDate,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<String> get leaveReason => $composableBuilder(
+    column: $table.leaveReason,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$EmployeeTableTableAnnotationComposer
@@ -1120,6 +1197,12 @@ class $$EmployeeTableTableAnnotationComposer
 
   GeneratedColumn<DateTime> get leaveDate =>
       $composableBuilder(column: $table.leaveDate, builder: (column) => column);
+
+  GeneratedColumnWithTypeConverter<LeaveReason?, String> get leaveReason =>
+      $composableBuilder(
+        column: $table.leaveReason,
+        builder: (column) => column,
+      );
 
   Expression<T> attendanceTableRefs<T extends Object>(
     Expression<T> Function($$AttendanceTableTableAnnotationComposer a) f,
@@ -1182,6 +1265,7 @@ class $$EmployeeTableTableTableManager
                 Value<String> job = const Value.absent(),
                 Value<Duration> collected = const Value.absent(),
                 Value<DateTime?> leaveDate = const Value.absent(),
+                Value<LeaveReason?> leaveReason = const Value.absent(),
               }) => EmployeeTableCompanion(
                 id: id,
                 firstName: firstName,
@@ -1190,6 +1274,7 @@ class $$EmployeeTableTableTableManager
                 job: job,
                 collected: collected,
                 leaveDate: leaveDate,
+                leaveReason: leaveReason,
               ),
           createCompanionCallback:
               ({
@@ -1200,6 +1285,7 @@ class $$EmployeeTableTableTableManager
                 Value<String> job = const Value.absent(),
                 Value<Duration> collected = const Value.absent(),
                 Value<DateTime?> leaveDate = const Value.absent(),
+                Value<LeaveReason?> leaveReason = const Value.absent(),
               }) => EmployeeTableCompanion.insert(
                 id: id,
                 firstName: firstName,
@@ -1208,6 +1294,7 @@ class $$EmployeeTableTableTableManager
                 job: job,
                 collected: collected,
                 leaveDate: leaveDate,
+                leaveReason: leaveReason,
               ),
           withReferenceMapper: (p0) => p0
               .map(

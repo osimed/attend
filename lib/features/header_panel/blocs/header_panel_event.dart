@@ -33,8 +33,13 @@ class DeleteEmployee extends HeaderPanelEvent {
 class LayoffEmployee extends HeaderPanelEvent {
   final int employeeId;
   final DateTime? left;
+  final LeaveReason? reason;
 
-  LayoffEmployee({required this.employeeId, required this.left});
+  LayoffEmployee({
+    required this.employeeId,
+    required this.left,
+    required this.reason,
+  });
 }
 
 class SelectAttendance extends HeaderPanelEvent {

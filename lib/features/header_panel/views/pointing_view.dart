@@ -12,7 +12,9 @@ class PointingView extends StatelessWidget {
   final TableVicinity? cell;
   final Attendance attendance;
 
-  const PointingView({super.key, required this.cell, required this.attendance});
+  final leaveReason = ValueNotifier<LeaveReason>(.resignation);
+
+  PointingView({super.key, required this.cell, required this.attendance});
 
   @override
   Widget build(BuildContext context) {
@@ -27,8 +29,12 @@ class PointingView extends StatelessWidget {
                 mainAxisAlignment: .center,
                 children: [
                   SizedBox(width: 240, child: buildTimeSelector(context)),
-                  Flexible(child: buildStatusSelector(context)),
-                  if (cell != null) buildEmployeeLayoffButton(context),
+                  Flexible(flex: 8, child: buildStatusSelector(context)),
+                  if (cell != null)
+                    Flexible(
+                      flex: 4,
+                      child: buildEmployeeLayoffButton(context),
+                    ),
                 ],
               ),
             );
@@ -41,8 +47,12 @@ class PointingView extends StatelessWidget {
                   height: 70,
                   child: Row(
                     children: [
-                      Flexible(child: buildTimeSelector(context)),
-                      if (cell != null) buildEmployeeLayoffButton(context),
+                      Flexible(flex: 6, child: buildTimeSelector(context)),
+                      if (cell != null)
+                        Flexible(
+                          flex: 4,
+                          child: buildEmployeeLayoffButton(context),
+                        ),
                     ],
                   ),
                 ),
@@ -250,28 +260,36 @@ class PointingView extends StatelessWidget {
   Widget buildEmployeeLayoffButton(BuildContext context) {
     return Padding(
       padding: const EdgeInsets.all(4.0),
-      child: FilledButton(
-        onPressed: () {
-          final bloc = context.read<HeaderPanelBloc>();
-          bloc.add(
-            LayoffEmployee(
-              employeeId: attendance.employeeId,
-              left: attendance.date,
+      child: PageView.builder(
+        itemCount: LeaveReason.values.length,
+        itemBuilder: (context, index) {
+          final reason = LeaveReason.values[index];
+          return FilledButton(
+            onPressed: () {
+              final bloc = context.read<HeaderPanelBloc>();
+              bloc.add(
+                LayoffEmployee(
+                  employeeId: attendance.employeeId,
+                  left: attendance.date,
+                  reason: reason,
+                ),
+              );
+            },
+            style: FilledButton.styleFrom(
+              backgroundColor: Theme.of(context).colorScheme.tertiary,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(12),
+              ),
+            ),
+            child: Center(
+              child: Text(
+                reason.fullname,
+                style: const TextStyle(fontSize: 18, fontWeight: .w800),
+                textAlign: .center,
+              ),
             ),
           );
         },
-        style: FilledButton.styleFrom(
-          backgroundColor: Theme.of(context).colorScheme.tertiary,
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(12),
-          ),
-        ),
-        child: const Center(
-          child: Text(
-            'DEMISSION',
-            style: TextStyle(fontSize: 18, fontWeight: .w800),
-          ),
-        ),
       ),
     );
   }

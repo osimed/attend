@@ -635,11 +635,12 @@ packages:
   pdf:
     dependency: "direct main"
     description:
-      name: pdf
-      sha256: e47a275b267873d5944ad5f5ff0dcc7ac2e36c02b3046a0ffac9b72fd362c44b
-      url: "https://pub.dev"
-    source: hosted
-    version: "3.12.0"
+      path: pdf
+      ref: "313-column-span"
+      resolved-ref: c2be9377d5d8a1625d5cce9123b1f09b2f422445
+      url: "https://github.com/Gustl22/dart_pdf.git"
+    source: git
+    version: "3.11.3"
   petitparser:
     dependency: transitive
     description:
