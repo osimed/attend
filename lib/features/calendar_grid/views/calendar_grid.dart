@@ -200,20 +200,6 @@ class TextBannerPainter extends CustomPainter {
 
   @override
   void paint(Canvas canvas, Size size) {
-    if (size.width <= _cellWidth * 2) {
-      final painter = TextPainter(
-        text: TextSpan(
-          text: text,
-          style: TextStyle(fontSize: 11, fontWeight: .w800, color: color),
-        ),
-        textDirection: .ltr,
-      );
-      painter.layout();
-      final dx = size.width - painter.width;
-      painter.paint(canvas, Offset(dx / 2, 21));
-      return;
-    }
-
     final painter = TextPainter(
       text: TextSpan(
         text: text,
@@ -225,6 +211,23 @@ class TextBannerPainter extends CustomPainter {
 
     const padding = 80;
     final stride = painter.width + padding;
+
+    if (size.width <= stride) {
+      final painter = TextPainter(
+        text: TextSpan(
+          text: text.replaceAll(' ', '\n'),
+          style: TextStyle(fontSize: 11, fontWeight: .w800, color: color),
+        ),
+        textDirection: .ltr,
+        textAlign: .center,
+      );
+      painter.layout();
+      final dx = size.width - painter.width;
+      final dy = size.height - painter.height;
+      painter.paint(canvas, Offset(dx / 2, dy / 2));
+      return;
+    }
+
     final elements = size.width ~/ stride;
     final leftover = size.width - stride * elements + padding;
 
