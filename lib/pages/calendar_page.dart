@@ -9,6 +9,7 @@ import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_state.dart';
 import 'package:attend/features/header_panel/views/header_panel.dart';
+import 'package:attend/services/calendar_service.dart';
 import 'package:attend/services/export_service.dart';
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
@@ -76,10 +77,8 @@ class CalendarPage extends StatelessWidget {
                 final month = currentState.month;
                 final rows = currentState.calendar;
                 if (rows.isEmpty) return;
-                final pdf = await locator.get<ExportService>().genTeamPdf(
-                  rows,
-                  month,
-                );
+                final srv = locator.get<ExportService>();
+                final pdf = await srv.genTeamPdf(rows, month);
                 final team = currentState.team.fullname.toLowerCase();
                 final dir = await getApplicationCacheDirectory();
                 final pdfName = '$team-${month.month}-${month.year}.pdf';
@@ -94,6 +93,25 @@ class CalendarPage extends StatelessWidget {
               icon: const Icon(CupertinoIcons.person_add),
               onPressed: () {
                 context.read<HeaderPanelBloc>().add(SelectEmployee());
+              },
+            ),
+
+            IconButton(
+              icon: const Icon(CupertinoIcons.table_badge_more),
+              onPressed: () async {
+                final currentState = context.read<CalendarGridBloc>().state;
+                final month = currentState.month;
+                final rows = currentState.calendar;
+                final srv = locator.get<CalendarService>();
+                final pdf = await srv.genCalendarPdf(rows, month);
+                final team = currentState.team.fullname.toLowerCase();
+                final dir = await getApplicationCacheDirectory();
+                final pdfName =
+                    'pointage-$team-${month.month}-${month.year}.pdf';
+                final pdfFile = File(join(dir.path, pdfName));
+                if (await pdfFile.exists()) await pdfFile.delete();
+                await pdfFile.writeAsBytes(pdf);
+                OpenFile.open(pdfFile.path);
               },
             ),
           ],
