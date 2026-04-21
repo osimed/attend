@@ -23,7 +23,7 @@ class CalendarDay extends StatelessWidget {
     return Padding(
       padding: const EdgeInsets.only(top: 0.5, right: 0.5, bottom: 0.5),
       child: Material(
-        color: diffFromNow > 0 && diffFromNow < 24
+        color: diffFromNow >= 0 && diffFromNow < 24
             ? Theme.of(context).colorScheme.secondary
             : Theme.of(context).colorScheme.surface,
         child: InkWell(
@@ -60,7 +60,7 @@ class CalendarDay extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: .w600,
-                  color: diffFromNow > 0 && diffFromNow < 24
+                  color: diffFromNow >= 0 && diffFromNow < 24
                       ? Theme.of(context).colorScheme.onSecondary
                       : Theme.of(context).colorScheme.onSurface,
                 ),
