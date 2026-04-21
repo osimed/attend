@@ -180,10 +180,14 @@ class _EmployeeNameCell extends StatelessWidget {
             Text(
               row.employee.lastName.toUpperCase(),
               style: const TextStyle(fontSize: 15, fontWeight: .w800),
+              overflow: .ellipsis,
+              maxLines: 1,
             ),
             Text(
               row.employee.firstName.toUpperCase(),
               style: const TextStyle(fontSize: 13, fontWeight: .w300),
+              overflow: .ellipsis,
+              maxLines: 1,
             ),
           ],
         ),
