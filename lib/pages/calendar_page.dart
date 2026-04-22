@@ -102,6 +102,7 @@ class CalendarPage extends StatelessWidget {
                 final currentState = context.read<CalendarGridBloc>().state;
                 final month = currentState.month;
                 final rows = currentState.calendar;
+                if (rows.isEmpty) return;
                 final srv = locator.get<CalendarService>();
                 final pdf = await srv.genCalendarPdf(rows, month);
                 final team = currentState.team.fullname.toLowerCase();

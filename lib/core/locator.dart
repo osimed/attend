@@ -13,9 +13,7 @@ void registerLazySingletons() {
   locator.registerLazySingleton(
     () => AttendService(locator.get<AppDatabase>()),
   );
-  locator.registerLazySingleton(
-    () => CalendarService(),
-  );
+  locator.registerLazySingleton(() => CalendarService());
   locator.registerLazySingleton(
     () => ExportService(locator.get<AttendService>()),
   );

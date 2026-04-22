@@ -32,7 +32,7 @@ class CalendarService {
                 children: [
                   _buildPageTitle(rows.first, month, half),
                   _buildColumnHeaders(month, half),
-                  ...rows.map((row) => _buildEmployeeRow(row, half)),
+                  ...rows.map((row) => _buildEmployeeRow(row, month, half)),
                 ],
               ),
             ];
@@ -101,7 +101,11 @@ class CalendarService {
     );
   }
 
-  pw.TableRow _buildEmployeeRow(CalendarRow row, (int, int) half) {
+  pw.TableRow _buildEmployeeRow(
+    CalendarRow row,
+    DateTime month,
+    (int, int) half,
+  ) {
     const m = 10;
     String fname = row.employee.firstName;
     fname = fname.substring(0, fname.length > m ? m : null);
@@ -144,13 +148,18 @@ class CalendarService {
           ),
         ),
         for (int day = half.$1; day <= half.$2; day++)
-          ...dayCells(row.attendances[day]),
+          ...dayCells(row.attendances[day], month.copyWith(day: day)),
       ],
     );
   }
 
-  List<pw.Widget> dayCells(Attendance? attendance) {
+  List<pw.Widget> dayCells(Attendance? attendance, DateTime date) {
     final status = attendance?.status ?? .empty;
+    final isSunday = date.weekday == DateTime.sunday;
+    if (status == .empty && isSunday) {
+      final dash = pw.Center(child: pw.SizedBox(width: 5, child: pw.Divider()));
+      return [pw.Expanded(child: dash), pw.Expanded(child: dash)];
+    }
     if (status != .empty && status != .p) {
       final statusName = status.name.toUpperCase();
       final statusColor = status.color?.toARGB32();
@@ -164,9 +173,9 @@ class CalendarService {
         pw.Expanded(child: statusWidget),
       ];
     }
-    final timeStyle = const pw.TextStyle(fontSize: 8);
     final enter = attendance?.enter?.displayTime() ?? '';
     final leave = attendance?.leave?.displayTime() ?? '';
+    const timeStyle = pw.TextStyle(fontSize: 8);
     return [
       pw.Expanded(
         child: pw.Center(child: pw.Text(enter, style: timeStyle)),
