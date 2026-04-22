@@ -2,16 +2,12 @@ import 'dart:typed_data';
 
 import 'package:attend/core/extensions.dart';
 import 'package:attend/database/database.dart';
-import 'package:attend/services/attend_service.dart';
 import 'package:flutter/material.dart' show DateUtils;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
 class CalendarService {
-  // ignore: unused_field
-  final AttendService _attendService;
-
-  CalendarService(this._attendService);
+  CalendarService();
 
   Future<Uint8List> genCalendarPdf(
     List<CalendarRow> rows,
