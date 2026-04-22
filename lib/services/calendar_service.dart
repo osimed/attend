@@ -119,7 +119,7 @@ class CalendarService {
           child: pw.Center(
             child: pw.Text(
               row.employee.id.toString(),
-              style: const pw.TextStyle(fontSize: 7),
+              style: const pw.TextStyle(fontSize: 5),
             ),
           ),
         ),
@@ -133,13 +133,13 @@ class CalendarService {
               children: [
                 pw.Text(
                   lname.toUpperCase(),
-                  style: const pw.TextStyle(fontSize: 7),
+                  style: const pw.TextStyle(fontSize: 5.5),
                   textAlign: .start,
                   maxLines: 1,
                 ),
                 pw.Text(
                   fname.toUpperCase(),
-                  style: const pw.TextStyle(fontSize: 7),
+                  style: const pw.TextStyle(fontSize: 5.5),
                   textAlign: .start,
                   maxLines: 1,
                 ),
