@@ -29,6 +29,7 @@ class _EditEmployeeState extends State<EditEmployee> {
     text: widget.employee?.id.toString(),
   );
   late final jobController = TextEditingController(text: widget.employee?.job);
+  late final suggestionsController = SuggestionsController<String>();
   late final collectedController = TextEditingController(
     text: widget.employee?.collected.formatTime(),
   );
@@ -44,7 +45,6 @@ class _EditEmployeeState extends State<EditEmployee> {
           firstNameController.text = state.employee?.firstName ?? '';
           lastNameController.text = state.employee?.lastName ?? '';
           jobController.text = state.employee?.job ?? '';
-          team = state.employee?.team ?? .exp;
           collectedController.text =
               state.employee?.collected.formatTime() ?? '';
         }
@@ -224,7 +224,10 @@ class _EditEmployeeState extends State<EditEmployee> {
             for (final t in Team.values)
               DropdownMenuItem(value: t, child: Text(t.fullname)),
           ],
-          onChanged: (t) => team = t ?? team,
+          onChanged: (t) {
+            team = t ?? team;
+            suggestionsController.refresh();
+          },
         );
       },
     );
@@ -285,6 +288,7 @@ class _EditEmployeeState extends State<EditEmployee> {
   TypeAheadField buildJobTextField() {
     return TypeAheadField<String>(
       controller: jobController,
+      suggestionsController: suggestionsController,
       builder: (context, controller, focusNode) {
         return TextFormField(
           controller: controller,
@@ -298,28 +302,13 @@ class _EditEmployeeState extends State<EditEmployee> {
             }
             return null;
           },
-          decoration: const InputDecoration(labelText: "poste", filled: true),
+          decoration: const InputDecoration(labelText: 'poste', filled: true),
         );
       },
-      hideOnEmpty: true,
+      hideOnEmpty: false,
       suggestionsCallback: (s) {
-        if (s.isNotEmpty) {
-          return [];
-        }
-        return [
-          'Contrôleur',
-          'Chef Rassemblement',
-          'Assistant Chef Rassemblement',
-          'Chef Expédition',
-          'Chef Réception',
-          'Sélecteur',
-          'Porteur',
-          'IT opérateur',
-          'Cariste',
-          'Manutentionnaine',
-          'Agent de nettoyage',
-          'Agent de sécurite',
-        ];
+        if (s.isNotEmpty) return [];
+        return _jobSuggestions(team);
       },
       constraints: BoxConstraints.tightFor(
         width: MediaQuery.of(context).size.width - 20,
@@ -338,12 +327,42 @@ class _EditEmployeeState extends State<EditEmployee> {
     );
   }
 
+  List<String> _jobSuggestions(Team team) {
+    return switch (team) {
+      .exp => [
+        'Chef Expédition',
+        'Assistant Chef Expédition',
+        'Chauffeur',
+        'Assistant Chauffeur',
+        'Technicien Mécanique',
+        'Technicien',
+        'Contrôleur',
+      ],
+      .rss => [
+        'Chef Rassemblement',
+        'Assistant Chef Rassemblement',
+        'Chef Réception',
+        'Assistant Chef Réception',
+        'Contrôleur',
+        'Sélecteur',
+        'Porteur',
+        'Cariste',
+        'Manutentionnaire',
+        'IT opérateur',
+        'Agent de nettoyage',
+        'Agent de sécurité',
+        'Technicien',
+      ],
+    };
+  }
+
   @override
   void dispose() {
     firstNameController.dispose();
     lastNameController.dispose();
     idController.dispose();
     jobController.dispose();
+    suggestionsController.dispose();
     collectedController.dispose();
     super.dispose();
   }
