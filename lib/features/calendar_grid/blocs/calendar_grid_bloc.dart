@@ -72,22 +72,24 @@ class CalendarGridBloc extends Bloc<CalendarGridEvent, CalendarGridState> {
     BulkSaveAttendances event,
     Emitter<CalendarGridState> emit,
   ) async {
-    for (final row in state.calendar) {
-      final ld = row.employee.leaveDate;
-      if (ld != null && event.date.isAfter(ld)) {
-        continue;
-      }
-      await _attendService.saveAttendance(
-        Attendance(
-          employeeId: row.employee.id,
-          date: event.date,
-          status: event.template.status,
-          enter: event.template.enter,
-          leave: event.template.leave,
-          lunchBreak: event.template.lunchBreak,
-        ),
-      );
-    }
+    final attendances = state.calendar
+        .where(
+          (row) =>
+              row.employee.leaveDate == null ||
+              !event.date.isAfter(row.employee.leaveDate!),
+        )
+        .map(
+          (row) => Attendance(
+            employeeId: row.employee.id,
+            date: event.date,
+            status: event.template.status,
+            enter: event.template.enter,
+            leave: event.template.leave,
+            lunchBreak: event.template.lunchBreak,
+          ),
+        )
+        .toList();
+    await _attendService.saveBulkAttendances(attendances);
     final calendar = await _attendService.loadCalendar(state.month, state.team);
     emit(
       MonthlyCalendarLoaded(

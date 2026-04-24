@@ -81,6 +81,10 @@ class AttendService {
     }
     return total;
   }
+
+  Future<void> saveBulkAttendances(List<Attendance> attendances) async {
+    return _database.saveBulkAttendances(attendances);
+  }
 }
 
 Duration _lunchBreakPause(DateTime enter, DateTime leave) {

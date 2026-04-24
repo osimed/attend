@@ -288,4 +288,12 @@ class AppDatabase extends _$AppDatabase {
       return NativeDatabase(newFile);
     });
   }
+
+  Future<void> saveBulkAttendances(List<Attendance> attendances) async {
+    await transaction(() async {
+      for (final a in attendances) {
+        await attendanceTable.insertOnConflictUpdate(a);
+      }
+    });
+  }
 }
