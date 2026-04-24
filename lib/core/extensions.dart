@@ -1,5 +1,14 @@
 import 'package:flutter/material.dart';
 
+extension ChunkList<T> on List<T> {
+  Iterable<List<T>> chunk(int size) sync* {
+    for (int i = 0; i < length; i += size) {
+      final end = i + size;
+      yield sublist(i, end > length ? null : end);
+    }
+  }
+}
+
 extension FormatMonth on DateTime {
   String formatMonth() {
     return "${month.toString().padLeft(2, '0')} - $year";

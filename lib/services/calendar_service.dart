@@ -19,56 +19,99 @@ class CalendarService {
     final monthMiddle = daysInMonth ~/ 2;
     final monthHalfs = [(1, monthMiddle), (monthMiddle + 1, daysInMonth)];
     for (final half in monthHalfs) {
-      pdf.addPage(
-        pw.MultiPage(
-          pageFormat: .a4,
-          orientation: .landscape,
-          margin: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 10),
-          maxPages: 100,
-          build: (pw.Context context) {
-            return [
-              pw.Table(
-                border: pw.TableBorder.all(width: 0.5),
+      for (final rowChunk in rows.chunk(22)) {
+        pdf.addPage(
+          pw.Page(
+            pageFormat: .a4,
+            orientation: .landscape,
+            margin: const pw.EdgeInsets.symmetric(horizontal: 10, vertical: 10),
+            build: (pw.Context context) {
+              return pw.Column(
                 children: [
                   _buildPageTitle(rows.first, month, half),
-                  _buildColumnHeaders(month, half),
-                  ...rows.map((row) => _buildEmployeeRow(row, month, half)),
+                  pw.SizedBox(height: 3),
+                  pw.Table(
+                    border: pw.TableBorder.all(width: 0.5),
+                    children: [
+                      _buildColumnHeaders(month, half),
+                      ...rowChunk.map(
+                        (row) => _buildEmployeeRow(row, month, half),
+                      ),
+                    ],
+                  ),
+                  pw.Spacer(),
+                  _buildPageFooter(),
                 ],
-              ),
-            ];
-          },
-        ),
-      );
+              );
+            },
+          ),
+        );
+      }
     }
     return pdf.save();
   }
 
-  pw.TableRow _buildPageTitle(
-    CalendarRow row,
-    DateTime month,
-    (int, int) half,
-  ) {
+  pw.Widget _buildPageFooter() {
+    const style = pw.TextStyle(fontSize: 11, fontWeight: pw.FontWeight.bold);
+    return pw.SizedBox(
+      height: 65,
+      child: pw.Row(
+        crossAxisAlignment: .start,
+        children: [
+          pw.Expanded(
+            child: pw.GridView(
+              direction: .horizontal,
+              crossAxisCount: 4,
+              children: Status.values
+                  .where((s) => s.fullname.isNotEmpty)
+                  .map(
+                    (s) => pw.Container(
+                      color: PdfColor.fromInt(s.color!.toARGB32()),
+                      child: pw.Center(
+                        child: pw.RichText(
+                          text: pw.TextSpan(
+                            text: '${s.name.toUpperCase()}: ',
+                            style: style,
+                            children: [
+                              pw.TextSpan(
+                                text: s.fullname,
+                                style: style.copyWith(fontSize: 9),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ),
+                    ),
+                  )
+                  .toList(),
+            ),
+          ),
+          pw.VerticalDivider(),
+          pw.Expanded(child: pw.Text('Chef signature', style: style)),
+          pw.VerticalDivider(),
+          pw.Expanded(
+            child: pw.Text(
+              "Directeur d'entrepôt et de logistique\nsignature",
+              style: style,
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
+  pw.Widget _buildPageTitle(CalendarRow row, DateTime month, (int, int) half) {
     final team = row.employee.team.fullname;
     final halfStr = half.$1 == 1 ? '1ere' : '2eme';
     final monthStr = monthName(month);
     final year = month.year.toString();
-    return pw.TableRow(
-      repeat: true,
-      children: [
-        pw.TableCell(child: pw.SizedBox(width: 36)),
-        pw.TableCell(child: pw.SizedBox(width: 50)),
-        pw.TableCell(
-          columnSpan: 2 * (half.$2 - half.$1 + 1),
-          child: pw.Padding(
-            padding: const pw.EdgeInsets.all(3),
-            child: pw.Text(
-              'Pointage Equipe $team $halfStr quinzaine $monthStr $year SITE-MARRAKECH',
-              textAlign: .center,
-              style: const pw.TextStyle(fontSize: 8),
-            ),
-          ),
-        ),
-      ],
+    return pw.Padding(
+      padding: const pw.EdgeInsets.all(3),
+      child: pw.Text(
+        'Pointage Equipe $team $halfStr quinzaine $monthStr $year SITE-MARRAKECH',
+        textAlign: .center,
+        style: const pw.TextStyle(fontSize: 10),
+      ),
     );
   }
 
@@ -79,11 +122,11 @@ class CalendarService {
       children: [
         pw.Padding(
           padding: const pw.EdgeInsets.all(3),
-          child: pw.Text('sup', style: textStyle, textAlign: .center),
+          child: pw.Text('SAP', style: textStyle, textAlign: .center),
         ),
         pw.Padding(
           padding: const pw.EdgeInsets.all(3),
-          child: pw.Text('nom', style: textStyle, textAlign: .center),
+          child: pw.Text('NOM', style: textStyle, textAlign: .center),
         ),
         for (int day = half.$1; day <= half.$2; day++)
           pw.TableCell(

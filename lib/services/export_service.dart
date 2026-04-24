@@ -181,7 +181,7 @@ class ExportService {
       height: 30,
       child: pw.Row(
         children: [
-          field('SUP', employee.id.toString(), flex: 0.8),
+          field('SAP', employee.id.toString(), flex: 0.8),
           field(
             'NOM PRÉNOM',
             '${employee.lastName.toUpperCase()} ${employee.firstName.toUpperCase()}',
