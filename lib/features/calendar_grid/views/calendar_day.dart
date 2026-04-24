@@ -18,12 +18,16 @@ class CalendarDay extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final now = DateTime.now();
     final targetDate = DateTime(month.year, month.month, vicinity.column);
-    final diffFromNow = DateTime.now().difference(targetDate).inHours;
+    final isToday =
+        now.year == targetDate.year &&
+        now.month == targetDate.month &&
+        now.day == targetDate.day;
     return Padding(
       padding: const EdgeInsets.only(top: 0.5, right: 0.5, bottom: 0.5),
       child: Material(
-        color: diffFromNow >= 0 && diffFromNow < 24
+        color: isToday
             ? Theme.of(context).colorScheme.secondary
             : Theme.of(context).colorScheme.surface,
         child: InkWell(
@@ -60,7 +64,7 @@ class CalendarDay extends StatelessWidget {
                 style: TextStyle(
                   fontSize: 9,
                   fontWeight: .w600,
-                  color: diffFromNow >= 0 && diffFromNow < 24
+                  color: isToday
                       ? Theme.of(context).colorScheme.onSecondary
                       : Theme.of(context).colorScheme.onSurface,
                 ),
