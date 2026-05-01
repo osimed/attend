@@ -1,5 +1,8 @@
+import 'dart:convert';
 import 'dart:io' as io;
 
+import 'package:attend/core/device_info.dart';
+import 'package:uuid/uuid.dart';
 import 'package:drift/drift.dart';
 import 'package:drift/native.dart';
 import 'package:flutter/material.dart' show TimeOfDay, Color, Colors;
@@ -26,7 +29,7 @@ enum Status {
       .a => 'ABSENCE',
       .j => 'JOUR FÉRIÉ',
       .m => 'MALADIE',
-      .ac => 'ACC. TRAVAIL',
+      .ac => 'ACCOUCHEMENT',
       .dc => 'DÉCÈS',
       _ => '',
     };
@@ -86,6 +89,15 @@ enum LeaveReason {
   termination,
   abandonment;
 
+  static LeaveReason? from(String? name) {
+    return switch (name) {
+      'resignation' => .resignation,
+      'abandonment' => .abandonment,
+      'termination' => .termination,
+      _ => null,
+    };
+  }
+
   String get fullname {
     return switch (this) {
       .resignation => 'DÉMISSION',
@@ -108,7 +120,30 @@ class EmployeeTable extends Table {
   TextColumn get leaveReason => textEnum<LeaveReason>().nullable()();
 }
 
-class DurationConverter extends TypeConverter<Duration, int> {
+@DataClassName('ChangeLog')
+class ChangeLogTable extends Table {
+  TextColumn get id => text()();
+  TextColumn get deviceId => text()();
+  DateTimeColumn get timestamp => dateTime()();
+  TextColumn get table => text()();
+  TextColumn get operation => text()();
+  TextColumn get payload => text()();
+
+  @override
+  Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('SyncCursor')
+class SyncCursorTable extends Table {
+  TextColumn get remoteDeviceId => text()();
+  DateTimeColumn get lastSynced => dateTime()();
+
+  @override
+  Set<Column> get primaryKey => {remoteDeviceId};
+}
+
+class DurationConverter extends TypeConverter<Duration, int>
+    with JsonTypeConverter<Duration, int> {
   const DurationConverter();
 
   @override
@@ -116,9 +151,20 @@ class DurationConverter extends TypeConverter<Duration, int> {
 
   @override
   int toSql(Duration value) => value.inMinutes;
+
+  @override
+  Duration fromJson(int json) {
+    return Duration(minutes: json);
+  }
+
+  @override
+  int toJson(Duration value) {
+    return value.inMinutes;
+  }
 }
 
-class TimeOfDayConverter extends TypeConverter<TimeOfDay, int> {
+class TimeOfDayConverter extends TypeConverter<TimeOfDay, int>
+    with JsonTypeConverter<TimeOfDay, int> {
   const TimeOfDayConverter();
 
   @override
@@ -127,6 +173,16 @@ class TimeOfDayConverter extends TypeConverter<TimeOfDay, int> {
 
   @override
   int toSql(TimeOfDay value) => value.hour * 60 + value.minute;
+
+  @override
+  TimeOfDay fromJson(int json) {
+    return TimeOfDay(hour: json ~/ 60, minute: json % 60);
+  }
+
+  @override
+  int toJson(TimeOfDay value) {
+    return value.hour * 60 + value.minute;
+  }
 }
 
 class CalendarRow {
@@ -136,12 +192,14 @@ class CalendarRow {
   CalendarRow(this.employee, this.attendances);
 }
 
-@DriftDatabase(tables: [EmployeeTable, AttendanceTable])
+@DriftDatabase(
+  tables: [EmployeeTable, AttendanceTable, ChangeLogTable, SyncCursorTable],
+)
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 4;
+  int get schemaVersion => 6;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -160,6 +218,12 @@ class AppDatabase extends _$AppDatabase {
           WHERE leave_date IS NOT NULL
         """;
         await customStatement(stmt);
+      }
+      if (from < 5) {
+        await m.createTable(changeLogTable);
+      }
+      if (from < 6) {
+        await m.createTable(syncCursorTable);
       }
     },
     beforeOpen: (d) async {
@@ -227,50 +291,199 @@ class AppDatabase extends _$AppDatabase {
     return attns;
   }
 
-  Future<void> saveAttendance(Attendance attendance) async {
-    attendanceTable.insertOnConflictUpdate(
-      AttendanceTableCompanion(
-        employeeId: Value(attendance.employeeId),
-        date: Value(attendance.date),
-        status: Value(attendance.status),
-        enter: Value(attendance.enter),
-        leave: Value(attendance.leave),
-        lunchBreak: Value(attendance.lunchBreak),
-      ),
-    );
+  Future<void> saveAttendance(Attendance attendance, {ChangeLog? log}) async {
+    await transaction(() async {
+      // log the action
+      final logC =
+          log?.toCompanion(true) ??
+          ChangeLogTableCompanion(
+            id: Value(const Uuid().v7()),
+            deviceId: Value((await deviceInfo()).$1),
+            timestamp: Value(DateTime.now()),
+            table: const Value('attendance'),
+            operation: const Value('save'),
+            payload: Value(jsonEncode({'attendance': attendance.toJson()})),
+          );
+      await changeLogTable.insertOnConflictUpdate(logC);
+
+      attendanceTable.insertOnConflictUpdate(
+        AttendanceTableCompanion(
+          employeeId: Value(attendance.employeeId),
+          date: Value(attendance.date),
+          status: Value(attendance.status),
+          enter: Value(attendance.enter),
+          leave: Value(attendance.leave),
+          lunchBreak: Value(attendance.lunchBreak),
+        ),
+      );
+    });
   }
 
-  Future<void> saveEmployee(Employee employee) async {
-    employeeTable.insertOnConflictUpdate(
-      EmployeeTableCompanion(
-        id: employee.id != -1 ? Value(employee.id) : const Value.absent(),
-        firstName: Value(employee.firstName),
-        lastName: Value(employee.lastName),
-        team: Value(employee.team),
-        job: Value(employee.job),
-        collected: Value(employee.collected),
-        leaveDate: Value(employee.leaveDate),
-      ),
-    );
+  Future<void> saveEmployee(Employee employee, {ChangeLog? log}) async {
+    await transaction(() async {
+      // log the action
+      final logC =
+          log?.toCompanion(true) ??
+          ChangeLogTableCompanion(
+            id: Value(const Uuid().v7()),
+            deviceId: Value((await deviceInfo()).$1),
+            timestamp: Value(DateTime.now()),
+            table: const Value('employee'),
+            operation: const Value('save'),
+            payload: Value(jsonEncode({'employee': employee.toJson()})),
+          );
+      await changeLogTable.insertOnConflictUpdate(logC);
+
+      employeeTable.insertOnConflictUpdate(
+        EmployeeTableCompanion(
+          id: employee.id != -1 ? Value(employee.id) : const Value.absent(),
+          firstName: Value(employee.firstName),
+          lastName: Value(employee.lastName),
+          team: Value(employee.team),
+          job: Value(employee.job),
+          collected: Value(employee.collected),
+          leaveDate: Value(employee.leaveDate),
+        ),
+      );
+    });
   }
 
-  Future<bool> deleteEmployee(Employee employee) async {
-    return employeeTable.deleteOne(employee);
+  Future<bool> deleteEmployee(Employee employee, {ChangeLog? log}) async {
+    return await transaction(() async {
+      // log the action
+      final logC =
+          log?.toCompanion(true) ??
+          ChangeLogTableCompanion(
+            id: Value(const Uuid().v7()),
+            deviceId: Value((await deviceInfo()).$1),
+            timestamp: Value(DateTime.now()),
+            table: const Value('employee'),
+            operation: const Value('delete'),
+            payload: Value(jsonEncode({'employee': employee.toJson()})),
+          );
+      await changeLogTable.insertOnConflictUpdate(logC);
+      return employeeTable.deleteOne(employee);
+    });
   }
 
   Future<void> layoffEmployee(
     int employeeId,
     DateTime? date,
-    LeaveReason? reason,
-  ) async {
-    final query = employeeTable.update()
-      ..where((empl) => empl.id.equals(employeeId));
-    await query.write(
-      EmployeeTableCompanion(
-        leaveDate: Value(date),
-        leaveReason: Value(reason),
-      ),
-    );
+    LeaveReason? reason, {
+    ChangeLog? log,
+  }) async {
+    await transaction(() async {
+      // log the action
+      final logC =
+          log?.toCompanion(true) ??
+          ChangeLogTableCompanion(
+            id: Value(const Uuid().v7()),
+            deviceId: Value((await deviceInfo()).$1),
+            timestamp: Value(DateTime.now()),
+            table: const Value('employee'),
+            operation: const Value('layoff'),
+            payload: Value(
+              jsonEncode({
+                'employeeId': employeeId,
+                'date': date?.toIso8601String(),
+                'reason': reason?.name,
+              }),
+            ),
+          );
+      await changeLogTable.insertOnConflictUpdate(logC);
+
+      final query = employeeTable.update()
+        ..where((empl) => empl.id.equals(employeeId));
+      await query.write(
+        EmployeeTableCompanion(
+          leaveDate: Value(date),
+          leaveReason: Value(reason),
+        ),
+      );
+    });
+  }
+
+  Future<void> saveBulkAttendances(
+    List<Attendance> attendances, {
+    ChangeLog? log,
+  }) async {
+    await transaction(() async {
+      // log the action
+      final logC =
+          log?.toCompanion(true) ??
+          ChangeLogTableCompanion(
+            id: Value(const Uuid().v7()),
+            deviceId: Value((await deviceInfo()).$1),
+            timestamp: Value(DateTime.now()),
+            table: const Value('attendance'),
+            operation: const Value('bulk-save'),
+            payload: Value(
+              jsonEncode({
+                'attendances': attendances.map((a) => a.toJson()).toList(),
+              }),
+            ),
+          );
+      await changeLogTable.insertOnConflictUpdate(logC);
+
+      for (final a in attendances) {
+        await attendanceTable.insertOnConflictUpdate(a);
+      }
+    });
+  }
+
+  Future<void> syncRemoteChanges(List<ChangeLog> changes) async {
+    changes.sort((a, b) => a.timestamp.compareTo(b.timestamp));
+
+    for (final entry in changes) {
+      final exists = await (select(
+        changeLogTable,
+      )..where((t) => t.id.equals(entry.id))).getSingleOrNull();
+      if (exists != null) continue;
+
+      final payload = jsonDecode(entry.payload);
+
+      switch (entry.table) {
+        case 'attendance':
+          switch (entry.operation) {
+            case 'save':
+              final atten = Attendance.fromJson(payload["attendance"]);
+              saveAttendance(atten, log: entry);
+            case 'bulk-save':
+              final attens = payload["attendances"] as List;
+              saveBulkAttendances(
+                attens.map((a) => Attendance.fromJson(a)).toList(),
+                log: entry,
+              );
+          }
+        case 'employee':
+          switch (entry.operation) {
+            case 'save':
+              final empl = Employee.fromJson(payload["employee"]);
+              saveEmployee(empl, log: entry);
+            case 'delete':
+              final empl = Employee.fromJson(payload["employee"]);
+              deleteEmployee(empl, log: entry);
+            case 'layoff':
+              final emplId = payload["employeeId"] as int;
+              final date = DateTime.tryParse(payload["date"]);
+              final reason = LeaveReason.from(payload["reason"]);
+              layoffEmployee(emplId, date, reason, log: entry);
+          }
+      }
+    }
+  }
+
+  Future<List<ChangeLog>> getChangeLogs(String remoteDeviceId) async {
+    final syncCursor = await (select(
+      syncCursorTable,
+    )..where((t) => t.remoteDeviceId.equals(remoteDeviceId))).getSingleOrNull();
+    final lastSynced =
+        syncCursor?.lastSynced ?? DateTime.fromMillisecondsSinceEpoch(0);
+
+    return (select(changeLogTable)
+          ..where((t) => t.timestamp.isBiggerThanValue(lastSynced))
+          ..orderBy([(t) => OrderingTerm.asc(t.timestamp)]))
+        .get();
   }
 
   static QueryExecutor _openConnection() {
@@ -286,14 +499,6 @@ class AppDatabase extends _$AppDatabase {
         }
       }
       return NativeDatabase(newFile);
-    });
-  }
-
-  Future<void> saveBulkAttendances(List<Attendance> attendances) async {
-    await transaction(() async {
-      for (final a in attendances) {
-        await attendanceTable.insertOnConflictUpdate(a);
-      }
     });
   }
 }

@@ -1,6 +1,7 @@
 import 'package:attend/core/locator.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_bloc.dart';
 import 'package:attend/features/calendar_grid/blocs/calendar_grid_event.dart';
+import 'package:attend/features/database_sync/blocs/database_sync_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/pages/calendar_page.dart';
 import 'package:attend/theme.dart';
@@ -24,11 +25,11 @@ class Attend extends StatelessWidget {
       darkTheme: MaterialTheme.dark(),
       home: MultiBlocProvider(
         providers: [
-          BlocProvider(create: (_) => locator.get<HeaderPanelBloc>()),
-          BlocProvider(
-            create: (_) =>
-                locator.get<CalendarGridBloc>()..add(LoadMonthlyCalendar()),
+          BlocProvider.value(value: locator.get<HeaderPanelBloc>()),
+          BlocProvider.value(
+            value: locator.get<CalendarGridBloc>()..add(LoadMonthlyCalendar()),
           ),
+          BlocProvider.value(value: locator.get<DatabaseSyncBloc>()),
         ],
         child: const CalendarPage(),
       ),

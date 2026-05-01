@@ -40,6 +40,14 @@ class AttendService {
     return _database.getAttendancesUpToMonth(team, month);
   }
 
+  Future<List<ChangeLog>> getChangeLogs(String remoteDeviceId) async {
+    return _database.getChangeLogs(remoteDeviceId);
+  }
+
+  Future<void> syncRemoteChanges(List<ChangeLog> changes) async {
+    return _database.syncRemoteChanges(changes);
+  }
+
   Duration? calcTimeDiff(Attendance? attendance) {
     if (attendance == null) return null;
     final date = attendance.date;

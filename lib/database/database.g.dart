@@ -204,7 +204,7 @@ class $EmployeeTableTable extends EmployeeTable
 
   static JsonTypeConverter2<Team, String, String> $converterteam =
       const EnumNameConverter<Team>(Team.values);
-  static TypeConverter<Duration, int> $convertercollected =
+  static JsonTypeConverter2<Duration, int, int> $convertercollected =
       const DurationConverter();
   static JsonTypeConverter2<LeaveReason, String, String> $converterleaveReason =
       const EnumNameConverter<LeaveReason>(LeaveReason.values);
@@ -289,7 +289,9 @@ class Employee extends DataClass implements Insertable<Employee> {
         serializer.fromJson<String>(json['team']),
       ),
       job: serializer.fromJson<String>(json['job']),
-      collected: serializer.fromJson<Duration>(json['collected']),
+      collected: $EmployeeTableTable.$convertercollected.fromJson(
+        serializer.fromJson<int>(json['collected']),
+      ),
       leaveDate: serializer.fromJson<DateTime?>(json['leaveDate']),
       leaveReason: $EmployeeTableTable.$converterleaveReasonn.fromJson(
         serializer.fromJson<String?>(json['leaveReason']),
@@ -307,7 +309,9 @@ class Employee extends DataClass implements Insertable<Employee> {
         $EmployeeTableTable.$converterteam.toJson(team),
       ),
       'job': serializer.toJson<String>(job),
-      'collected': serializer.toJson<Duration>(collected),
+      'collected': serializer.toJson<int>(
+        $EmployeeTableTable.$convertercollected.toJson(collected),
+      ),
       'leaveDate': serializer.toJson<DateTime?>(leaveDate),
       'leaveReason': serializer.toJson<String?>(
         $EmployeeTableTable.$converterleaveReasonn.toJson(leaveReason),
@@ -679,14 +683,14 @@ class $AttendanceTableTable extends AttendanceTable
 
   static JsonTypeConverter2<Status, String, String> $converterstatus =
       const EnumNameConverter<Status>(Status.values);
-  static TypeConverter<TimeOfDay, int> $converterenter =
+  static JsonTypeConverter2<TimeOfDay, int, int> $converterenter =
       const TimeOfDayConverter();
-  static TypeConverter<TimeOfDay?, int?> $converterentern =
-      NullAwareTypeConverter.wrap($converterenter);
-  static TypeConverter<TimeOfDay, int> $converterleave =
+  static JsonTypeConverter2<TimeOfDay?, int?, int?> $converterentern =
+      JsonTypeConverter2.asNullable($converterenter);
+  static JsonTypeConverter2<TimeOfDay, int, int> $converterleave =
       const TimeOfDayConverter();
-  static TypeConverter<TimeOfDay?, int?> $converterleaven =
-      NullAwareTypeConverter.wrap($converterleave);
+  static JsonTypeConverter2<TimeOfDay?, int?, int?> $converterleaven =
+      JsonTypeConverter2.asNullable($converterleave);
 }
 
 class Attendance extends DataClass implements Insertable<Attendance> {
@@ -754,8 +758,12 @@ class Attendance extends DataClass implements Insertable<Attendance> {
       status: $AttendanceTableTable.$converterstatus.fromJson(
         serializer.fromJson<String>(json['status']),
       ),
-      enter: serializer.fromJson<TimeOfDay?>(json['enter']),
-      leave: serializer.fromJson<TimeOfDay?>(json['leave']),
+      enter: $AttendanceTableTable.$converterentern.fromJson(
+        serializer.fromJson<int?>(json['enter']),
+      ),
+      leave: $AttendanceTableTable.$converterleaven.fromJson(
+        serializer.fromJson<int?>(json['leave']),
+      ),
       lunchBreak: serializer.fromJson<bool>(json['lunchBreak']),
     );
   }
@@ -768,8 +776,12 @@ class Attendance extends DataClass implements Insertable<Attendance> {
       'status': serializer.toJson<String>(
         $AttendanceTableTable.$converterstatus.toJson(status),
       ),
-      'enter': serializer.toJson<TimeOfDay?>(enter),
-      'leave': serializer.toJson<TimeOfDay?>(leave),
+      'enter': serializer.toJson<int?>(
+        $AttendanceTableTable.$converterentern.toJson(enter),
+      ),
+      'leave': serializer.toJson<int?>(
+        $AttendanceTableTable.$converterleaven.toJson(leave),
+      ),
       'lunchBreak': serializer.toJson<bool>(lunchBreak),
     };
   }
@@ -948,11 +960,648 @@ class AttendanceTableCompanion extends UpdateCompanion<Attendance> {
   }
 }
 
+class $ChangeLogTableTable extends ChangeLogTable
+    with TableInfo<$ChangeLogTableTable, ChangeLog> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $ChangeLogTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _idMeta = const VerificationMeta('id');
+  @override
+  late final GeneratedColumn<String> id = GeneratedColumn<String>(
+    'id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _deviceIdMeta = const VerificationMeta(
+    'deviceId',
+  );
+  @override
+  late final GeneratedColumn<String> deviceId = GeneratedColumn<String>(
+    'device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _timestampMeta = const VerificationMeta(
+    'timestamp',
+  );
+  @override
+  late final GeneratedColumn<DateTime> timestamp = GeneratedColumn<DateTime>(
+    'timestamp',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _tableMeta = const VerificationMeta('table');
+  @override
+  late final GeneratedColumn<String> table = GeneratedColumn<String>(
+    'table',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _operationMeta = const VerificationMeta(
+    'operation',
+  );
+  @override
+  late final GeneratedColumn<String> operation = GeneratedColumn<String>(
+    'operation',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _payloadMeta = const VerificationMeta(
+    'payload',
+  );
+  @override
+  late final GeneratedColumn<String> payload = GeneratedColumn<String>(
+    'payload',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    id,
+    deviceId,
+    timestamp,
+    table,
+    operation,
+    payload,
+  ];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'change_log_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<ChangeLog> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('id')) {
+      context.handle(_idMeta, id.isAcceptableOrUnknown(data['id']!, _idMeta));
+    } else if (isInserting) {
+      context.missing(_idMeta);
+    }
+    if (data.containsKey('device_id')) {
+      context.handle(
+        _deviceIdMeta,
+        deviceId.isAcceptableOrUnknown(data['device_id']!, _deviceIdMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_deviceIdMeta);
+    }
+    if (data.containsKey('timestamp')) {
+      context.handle(
+        _timestampMeta,
+        timestamp.isAcceptableOrUnknown(data['timestamp']!, _timestampMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_timestampMeta);
+    }
+    if (data.containsKey('table')) {
+      context.handle(
+        _tableMeta,
+        table.isAcceptableOrUnknown(data['table']!, _tableMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_tableMeta);
+    }
+    if (data.containsKey('operation')) {
+      context.handle(
+        _operationMeta,
+        operation.isAcceptableOrUnknown(data['operation']!, _operationMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_operationMeta);
+    }
+    if (data.containsKey('payload')) {
+      context.handle(
+        _payloadMeta,
+        payload.isAcceptableOrUnknown(data['payload']!, _payloadMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_payloadMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {id};
+  @override
+  ChangeLog map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return ChangeLog(
+      id: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}id'],
+      )!,
+      deviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}device_id'],
+      )!,
+      timestamp: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}timestamp'],
+      )!,
+      table: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}table'],
+      )!,
+      operation: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}operation'],
+      )!,
+      payload: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}payload'],
+      )!,
+    );
+  }
+
+  @override
+  $ChangeLogTableTable createAlias(String alias) {
+    return $ChangeLogTableTable(attachedDatabase, alias);
+  }
+}
+
+class ChangeLog extends DataClass implements Insertable<ChangeLog> {
+  final String id;
+  final String deviceId;
+  final DateTime timestamp;
+  final String table;
+  final String operation;
+  final String payload;
+  const ChangeLog({
+    required this.id,
+    required this.deviceId,
+    required this.timestamp,
+    required this.table,
+    required this.operation,
+    required this.payload,
+  });
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['id'] = Variable<String>(id);
+    map['device_id'] = Variable<String>(deviceId);
+    map['timestamp'] = Variable<DateTime>(timestamp);
+    map['table'] = Variable<String>(table);
+    map['operation'] = Variable<String>(operation);
+    map['payload'] = Variable<String>(payload);
+    return map;
+  }
+
+  ChangeLogTableCompanion toCompanion(bool nullToAbsent) {
+    return ChangeLogTableCompanion(
+      id: Value(id),
+      deviceId: Value(deviceId),
+      timestamp: Value(timestamp),
+      table: Value(table),
+      operation: Value(operation),
+      payload: Value(payload),
+    );
+  }
+
+  factory ChangeLog.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return ChangeLog(
+      id: serializer.fromJson<String>(json['id']),
+      deviceId: serializer.fromJson<String>(json['deviceId']),
+      timestamp: serializer.fromJson<DateTime>(json['timestamp']),
+      table: serializer.fromJson<String>(json['table']),
+      operation: serializer.fromJson<String>(json['operation']),
+      payload: serializer.fromJson<String>(json['payload']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'id': serializer.toJson<String>(id),
+      'deviceId': serializer.toJson<String>(deviceId),
+      'timestamp': serializer.toJson<DateTime>(timestamp),
+      'table': serializer.toJson<String>(table),
+      'operation': serializer.toJson<String>(operation),
+      'payload': serializer.toJson<String>(payload),
+    };
+  }
+
+  ChangeLog copyWith({
+    String? id,
+    String? deviceId,
+    DateTime? timestamp,
+    String? table,
+    String? operation,
+    String? payload,
+  }) => ChangeLog(
+    id: id ?? this.id,
+    deviceId: deviceId ?? this.deviceId,
+    timestamp: timestamp ?? this.timestamp,
+    table: table ?? this.table,
+    operation: operation ?? this.operation,
+    payload: payload ?? this.payload,
+  );
+  ChangeLog copyWithCompanion(ChangeLogTableCompanion data) {
+    return ChangeLog(
+      id: data.id.present ? data.id.value : this.id,
+      deviceId: data.deviceId.present ? data.deviceId.value : this.deviceId,
+      timestamp: data.timestamp.present ? data.timestamp.value : this.timestamp,
+      table: data.table.present ? data.table.value : this.table,
+      operation: data.operation.present ? data.operation.value : this.operation,
+      payload: data.payload.present ? data.payload.value : this.payload,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ChangeLog(')
+          ..write('id: $id, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('table: $table, ')
+          ..write('operation: $operation, ')
+          ..write('payload: $payload')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode =>
+      Object.hash(id, deviceId, timestamp, table, operation, payload);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is ChangeLog &&
+          other.id == this.id &&
+          other.deviceId == this.deviceId &&
+          other.timestamp == this.timestamp &&
+          other.table == this.table &&
+          other.operation == this.operation &&
+          other.payload == this.payload);
+}
+
+class ChangeLogTableCompanion extends UpdateCompanion<ChangeLog> {
+  final Value<String> id;
+  final Value<String> deviceId;
+  final Value<DateTime> timestamp;
+  final Value<String> table;
+  final Value<String> operation;
+  final Value<String> payload;
+  final Value<int> rowid;
+  const ChangeLogTableCompanion({
+    this.id = const Value.absent(),
+    this.deviceId = const Value.absent(),
+    this.timestamp = const Value.absent(),
+    this.table = const Value.absent(),
+    this.operation = const Value.absent(),
+    this.payload = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  ChangeLogTableCompanion.insert({
+    required String id,
+    required String deviceId,
+    required DateTime timestamp,
+    required String table,
+    required String operation,
+    required String payload,
+    this.rowid = const Value.absent(),
+  }) : id = Value(id),
+       deviceId = Value(deviceId),
+       timestamp = Value(timestamp),
+       table = Value(table),
+       operation = Value(operation),
+       payload = Value(payload);
+  static Insertable<ChangeLog> custom({
+    Expression<String>? id,
+    Expression<String>? deviceId,
+    Expression<DateTime>? timestamp,
+    Expression<String>? table,
+    Expression<String>? operation,
+    Expression<String>? payload,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (id != null) 'id': id,
+      if (deviceId != null) 'device_id': deviceId,
+      if (timestamp != null) 'timestamp': timestamp,
+      if (table != null) 'table': table,
+      if (operation != null) 'operation': operation,
+      if (payload != null) 'payload': payload,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  ChangeLogTableCompanion copyWith({
+    Value<String>? id,
+    Value<String>? deviceId,
+    Value<DateTime>? timestamp,
+    Value<String>? table,
+    Value<String>? operation,
+    Value<String>? payload,
+    Value<int>? rowid,
+  }) {
+    return ChangeLogTableCompanion(
+      id: id ?? this.id,
+      deviceId: deviceId ?? this.deviceId,
+      timestamp: timestamp ?? this.timestamp,
+      table: table ?? this.table,
+      operation: operation ?? this.operation,
+      payload: payload ?? this.payload,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (id.present) {
+      map['id'] = Variable<String>(id.value);
+    }
+    if (deviceId.present) {
+      map['device_id'] = Variable<String>(deviceId.value);
+    }
+    if (timestamp.present) {
+      map['timestamp'] = Variable<DateTime>(timestamp.value);
+    }
+    if (table.present) {
+      map['table'] = Variable<String>(table.value);
+    }
+    if (operation.present) {
+      map['operation'] = Variable<String>(operation.value);
+    }
+    if (payload.present) {
+      map['payload'] = Variable<String>(payload.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('ChangeLogTableCompanion(')
+          ..write('id: $id, ')
+          ..write('deviceId: $deviceId, ')
+          ..write('timestamp: $timestamp, ')
+          ..write('table: $table, ')
+          ..write('operation: $operation, ')
+          ..write('payload: $payload, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
+class $SyncCursorTableTable extends SyncCursorTable
+    with TableInfo<$SyncCursorTableTable, SyncCursor> {
+  @override
+  final GeneratedDatabase attachedDatabase;
+  final String? _alias;
+  $SyncCursorTableTable(this.attachedDatabase, [this._alias]);
+  static const VerificationMeta _remoteDeviceIdMeta = const VerificationMeta(
+    'remoteDeviceId',
+  );
+  @override
+  late final GeneratedColumn<String> remoteDeviceId = GeneratedColumn<String>(
+    'remote_device_id',
+    aliasedName,
+    false,
+    type: DriftSqlType.string,
+    requiredDuringInsert: true,
+  );
+  static const VerificationMeta _lastSyncedMeta = const VerificationMeta(
+    'lastSynced',
+  );
+  @override
+  late final GeneratedColumn<DateTime> lastSynced = GeneratedColumn<DateTime>(
+    'last_synced',
+    aliasedName,
+    false,
+    type: DriftSqlType.dateTime,
+    requiredDuringInsert: true,
+  );
+  @override
+  List<GeneratedColumn> get $columns => [remoteDeviceId, lastSynced];
+  @override
+  String get aliasedName => _alias ?? actualTableName;
+  @override
+  String get actualTableName => $name;
+  static const String $name = 'sync_cursor_table';
+  @override
+  VerificationContext validateIntegrity(
+    Insertable<SyncCursor> instance, {
+    bool isInserting = false,
+  }) {
+    final context = VerificationContext();
+    final data = instance.toColumns(true);
+    if (data.containsKey('remote_device_id')) {
+      context.handle(
+        _remoteDeviceIdMeta,
+        remoteDeviceId.isAcceptableOrUnknown(
+          data['remote_device_id']!,
+          _remoteDeviceIdMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_remoteDeviceIdMeta);
+    }
+    if (data.containsKey('last_synced')) {
+      context.handle(
+        _lastSyncedMeta,
+        lastSynced.isAcceptableOrUnknown(data['last_synced']!, _lastSyncedMeta),
+      );
+    } else if (isInserting) {
+      context.missing(_lastSyncedMeta);
+    }
+    return context;
+  }
+
+  @override
+  Set<GeneratedColumn> get $primaryKey => {remoteDeviceId};
+  @override
+  SyncCursor map(Map<String, dynamic> data, {String? tablePrefix}) {
+    final effectivePrefix = tablePrefix != null ? '$tablePrefix.' : '';
+    return SyncCursor(
+      remoteDeviceId: attachedDatabase.typeMapping.read(
+        DriftSqlType.string,
+        data['${effectivePrefix}remote_device_id'],
+      )!,
+      lastSynced: attachedDatabase.typeMapping.read(
+        DriftSqlType.dateTime,
+        data['${effectivePrefix}last_synced'],
+      )!,
+    );
+  }
+
+  @override
+  $SyncCursorTableTable createAlias(String alias) {
+    return $SyncCursorTableTable(attachedDatabase, alias);
+  }
+}
+
+class SyncCursor extends DataClass implements Insertable<SyncCursor> {
+  final String remoteDeviceId;
+  final DateTime lastSynced;
+  const SyncCursor({required this.remoteDeviceId, required this.lastSynced});
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    map['remote_device_id'] = Variable<String>(remoteDeviceId);
+    map['last_synced'] = Variable<DateTime>(lastSynced);
+    return map;
+  }
+
+  SyncCursorTableCompanion toCompanion(bool nullToAbsent) {
+    return SyncCursorTableCompanion(
+      remoteDeviceId: Value(remoteDeviceId),
+      lastSynced: Value(lastSynced),
+    );
+  }
+
+  factory SyncCursor.fromJson(
+    Map<String, dynamic> json, {
+    ValueSerializer? serializer,
+  }) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return SyncCursor(
+      remoteDeviceId: serializer.fromJson<String>(json['remoteDeviceId']),
+      lastSynced: serializer.fromJson<DateTime>(json['lastSynced']),
+    );
+  }
+  @override
+  Map<String, dynamic> toJson({ValueSerializer? serializer}) {
+    serializer ??= driftRuntimeOptions.defaultSerializer;
+    return <String, dynamic>{
+      'remoteDeviceId': serializer.toJson<String>(remoteDeviceId),
+      'lastSynced': serializer.toJson<DateTime>(lastSynced),
+    };
+  }
+
+  SyncCursor copyWith({String? remoteDeviceId, DateTime? lastSynced}) =>
+      SyncCursor(
+        remoteDeviceId: remoteDeviceId ?? this.remoteDeviceId,
+        lastSynced: lastSynced ?? this.lastSynced,
+      );
+  SyncCursor copyWithCompanion(SyncCursorTableCompanion data) {
+    return SyncCursor(
+      remoteDeviceId: data.remoteDeviceId.present
+          ? data.remoteDeviceId.value
+          : this.remoteDeviceId,
+      lastSynced: data.lastSynced.present
+          ? data.lastSynced.value
+          : this.lastSynced,
+    );
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncCursor(')
+          ..write('remoteDeviceId: $remoteDeviceId, ')
+          ..write('lastSynced: $lastSynced')
+          ..write(')'))
+        .toString();
+  }
+
+  @override
+  int get hashCode => Object.hash(remoteDeviceId, lastSynced);
+  @override
+  bool operator ==(Object other) =>
+      identical(this, other) ||
+      (other is SyncCursor &&
+          other.remoteDeviceId == this.remoteDeviceId &&
+          other.lastSynced == this.lastSynced);
+}
+
+class SyncCursorTableCompanion extends UpdateCompanion<SyncCursor> {
+  final Value<String> remoteDeviceId;
+  final Value<DateTime> lastSynced;
+  final Value<int> rowid;
+  const SyncCursorTableCompanion({
+    this.remoteDeviceId = const Value.absent(),
+    this.lastSynced = const Value.absent(),
+    this.rowid = const Value.absent(),
+  });
+  SyncCursorTableCompanion.insert({
+    required String remoteDeviceId,
+    required DateTime lastSynced,
+    this.rowid = const Value.absent(),
+  }) : remoteDeviceId = Value(remoteDeviceId),
+       lastSynced = Value(lastSynced);
+  static Insertable<SyncCursor> custom({
+    Expression<String>? remoteDeviceId,
+    Expression<DateTime>? lastSynced,
+    Expression<int>? rowid,
+  }) {
+    return RawValuesInsertable({
+      if (remoteDeviceId != null) 'remote_device_id': remoteDeviceId,
+      if (lastSynced != null) 'last_synced': lastSynced,
+      if (rowid != null) 'rowid': rowid,
+    });
+  }
+
+  SyncCursorTableCompanion copyWith({
+    Value<String>? remoteDeviceId,
+    Value<DateTime>? lastSynced,
+    Value<int>? rowid,
+  }) {
+    return SyncCursorTableCompanion(
+      remoteDeviceId: remoteDeviceId ?? this.remoteDeviceId,
+      lastSynced: lastSynced ?? this.lastSynced,
+      rowid: rowid ?? this.rowid,
+    );
+  }
+
+  @override
+  Map<String, Expression> toColumns(bool nullToAbsent) {
+    final map = <String, Expression>{};
+    if (remoteDeviceId.present) {
+      map['remote_device_id'] = Variable<String>(remoteDeviceId.value);
+    }
+    if (lastSynced.present) {
+      map['last_synced'] = Variable<DateTime>(lastSynced.value);
+    }
+    if (rowid.present) {
+      map['rowid'] = Variable<int>(rowid.value);
+    }
+    return map;
+  }
+
+  @override
+  String toString() {
+    return (StringBuffer('SyncCursorTableCompanion(')
+          ..write('remoteDeviceId: $remoteDeviceId, ')
+          ..write('lastSynced: $lastSynced, ')
+          ..write('rowid: $rowid')
+          ..write(')'))
+        .toString();
+  }
+}
+
 abstract class _$AppDatabase extends GeneratedDatabase {
   _$AppDatabase(QueryExecutor e) : super(e);
   $AppDatabaseManager get managers => $AppDatabaseManager(this);
   late final $EmployeeTableTable employeeTable = $EmployeeTableTable(this);
   late final $AttendanceTableTable attendanceTable = $AttendanceTableTable(
+    this,
+  );
+  late final $ChangeLogTableTable changeLogTable = $ChangeLogTableTable(this);
+  late final $SyncCursorTableTable syncCursorTable = $SyncCursorTableTable(
     this,
   );
   late final Index dateIdx = Index(
@@ -970,6 +1619,8 @@ abstract class _$AppDatabase extends GeneratedDatabase {
   List<DatabaseSchemaEntity> get allSchemaEntities => [
     employeeTable,
     attendanceTable,
+    changeLogTable,
+    syncCursorTable,
     dateIdx,
     employeeIdIdx,
   ];
@@ -1708,6 +2359,376 @@ typedef $$AttendanceTableTableProcessedTableManager =
       Attendance,
       PrefetchHooks Function({bool employeeId})
     >;
+typedef $$ChangeLogTableTableCreateCompanionBuilder =
+    ChangeLogTableCompanion Function({
+      required String id,
+      required String deviceId,
+      required DateTime timestamp,
+      required String table,
+      required String operation,
+      required String payload,
+      Value<int> rowid,
+    });
+typedef $$ChangeLogTableTableUpdateCompanionBuilder =
+    ChangeLogTableCompanion Function({
+      Value<String> id,
+      Value<String> deviceId,
+      Value<DateTime> timestamp,
+      Value<String> table,
+      Value<String> operation,
+      Value<String> payload,
+      Value<int> rowid,
+    });
+
+class $$ChangeLogTableTableFilterComposer
+    extends Composer<_$AppDatabase, $ChangeLogTableTable> {
+  $$ChangeLogTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get table => $composableBuilder(
+    column: $table.table,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$ChangeLogTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $ChangeLogTableTable> {
+  $$ChangeLogTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get id => $composableBuilder(
+    column: $table.id,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get deviceId => $composableBuilder(
+    column: $table.deviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get timestamp => $composableBuilder(
+    column: $table.timestamp,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get table => $composableBuilder(
+    column: $table.table,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get operation => $composableBuilder(
+    column: $table.operation,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<String> get payload => $composableBuilder(
+    column: $table.payload,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$ChangeLogTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $ChangeLogTableTable> {
+  $$ChangeLogTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get id =>
+      $composableBuilder(column: $table.id, builder: (column) => column);
+
+  GeneratedColumn<String> get deviceId =>
+      $composableBuilder(column: $table.deviceId, builder: (column) => column);
+
+  GeneratedColumn<DateTime> get timestamp =>
+      $composableBuilder(column: $table.timestamp, builder: (column) => column);
+
+  GeneratedColumn<String> get table =>
+      $composableBuilder(column: $table.table, builder: (column) => column);
+
+  GeneratedColumn<String> get operation =>
+      $composableBuilder(column: $table.operation, builder: (column) => column);
+
+  GeneratedColumn<String> get payload =>
+      $composableBuilder(column: $table.payload, builder: (column) => column);
+}
+
+class $$ChangeLogTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $ChangeLogTableTable,
+          ChangeLog,
+          $$ChangeLogTableTableFilterComposer,
+          $$ChangeLogTableTableOrderingComposer,
+          $$ChangeLogTableTableAnnotationComposer,
+          $$ChangeLogTableTableCreateCompanionBuilder,
+          $$ChangeLogTableTableUpdateCompanionBuilder,
+          (
+            ChangeLog,
+            BaseReferences<_$AppDatabase, $ChangeLogTableTable, ChangeLog>,
+          ),
+          ChangeLog,
+          PrefetchHooks Function()
+        > {
+  $$ChangeLogTableTableTableManager(
+    _$AppDatabase db,
+    $ChangeLogTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$ChangeLogTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$ChangeLogTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$ChangeLogTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> id = const Value.absent(),
+                Value<String> deviceId = const Value.absent(),
+                Value<DateTime> timestamp = const Value.absent(),
+                Value<String> table = const Value.absent(),
+                Value<String> operation = const Value.absent(),
+                Value<String> payload = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => ChangeLogTableCompanion(
+                id: id,
+                deviceId: deviceId,
+                timestamp: timestamp,
+                table: table,
+                operation: operation,
+                payload: payload,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String id,
+                required String deviceId,
+                required DateTime timestamp,
+                required String table,
+                required String operation,
+                required String payload,
+                Value<int> rowid = const Value.absent(),
+              }) => ChangeLogTableCompanion.insert(
+                id: id,
+                deviceId: deviceId,
+                timestamp: timestamp,
+                table: table,
+                operation: operation,
+                payload: payload,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$ChangeLogTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $ChangeLogTableTable,
+      ChangeLog,
+      $$ChangeLogTableTableFilterComposer,
+      $$ChangeLogTableTableOrderingComposer,
+      $$ChangeLogTableTableAnnotationComposer,
+      $$ChangeLogTableTableCreateCompanionBuilder,
+      $$ChangeLogTableTableUpdateCompanionBuilder,
+      (
+        ChangeLog,
+        BaseReferences<_$AppDatabase, $ChangeLogTableTable, ChangeLog>,
+      ),
+      ChangeLog,
+      PrefetchHooks Function()
+    >;
+typedef $$SyncCursorTableTableCreateCompanionBuilder =
+    SyncCursorTableCompanion Function({
+      required String remoteDeviceId,
+      required DateTime lastSynced,
+      Value<int> rowid,
+    });
+typedef $$SyncCursorTableTableUpdateCompanionBuilder =
+    SyncCursorTableCompanion Function({
+      Value<String> remoteDeviceId,
+      Value<DateTime> lastSynced,
+      Value<int> rowid,
+    });
+
+class $$SyncCursorTableTableFilterComposer
+    extends Composer<_$AppDatabase, $SyncCursorTableTable> {
+  $$SyncCursorTableTableFilterComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnFilters<String> get remoteDeviceId => $composableBuilder(
+    column: $table.remoteDeviceId,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<DateTime> get lastSynced => $composableBuilder(
+    column: $table.lastSynced,
+    builder: (column) => ColumnFilters(column),
+  );
+}
+
+class $$SyncCursorTableTableOrderingComposer
+    extends Composer<_$AppDatabase, $SyncCursorTableTable> {
+  $$SyncCursorTableTableOrderingComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  ColumnOrderings<String> get remoteDeviceId => $composableBuilder(
+    column: $table.remoteDeviceId,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<DateTime> get lastSynced => $composableBuilder(
+    column: $table.lastSynced,
+    builder: (column) => ColumnOrderings(column),
+  );
+}
+
+class $$SyncCursorTableTableAnnotationComposer
+    extends Composer<_$AppDatabase, $SyncCursorTableTable> {
+  $$SyncCursorTableTableAnnotationComposer({
+    required super.$db,
+    required super.$table,
+    super.joinBuilder,
+    super.$addJoinBuilderToRootComposer,
+    super.$removeJoinBuilderFromRootComposer,
+  });
+  GeneratedColumn<String> get remoteDeviceId => $composableBuilder(
+    column: $table.remoteDeviceId,
+    builder: (column) => column,
+  );
+
+  GeneratedColumn<DateTime> get lastSynced => $composableBuilder(
+    column: $table.lastSynced,
+    builder: (column) => column,
+  );
+}
+
+class $$SyncCursorTableTableTableManager
+    extends
+        RootTableManager<
+          _$AppDatabase,
+          $SyncCursorTableTable,
+          SyncCursor,
+          $$SyncCursorTableTableFilterComposer,
+          $$SyncCursorTableTableOrderingComposer,
+          $$SyncCursorTableTableAnnotationComposer,
+          $$SyncCursorTableTableCreateCompanionBuilder,
+          $$SyncCursorTableTableUpdateCompanionBuilder,
+          (
+            SyncCursor,
+            BaseReferences<_$AppDatabase, $SyncCursorTableTable, SyncCursor>,
+          ),
+          SyncCursor,
+          PrefetchHooks Function()
+        > {
+  $$SyncCursorTableTableTableManager(
+    _$AppDatabase db,
+    $SyncCursorTableTable table,
+  ) : super(
+        TableManagerState(
+          db: db,
+          table: table,
+          createFilteringComposer: () =>
+              $$SyncCursorTableTableFilterComposer($db: db, $table: table),
+          createOrderingComposer: () =>
+              $$SyncCursorTableTableOrderingComposer($db: db, $table: table),
+          createComputedFieldComposer: () =>
+              $$SyncCursorTableTableAnnotationComposer($db: db, $table: table),
+          updateCompanionCallback:
+              ({
+                Value<String> remoteDeviceId = const Value.absent(),
+                Value<DateTime> lastSynced = const Value.absent(),
+                Value<int> rowid = const Value.absent(),
+              }) => SyncCursorTableCompanion(
+                remoteDeviceId: remoteDeviceId,
+                lastSynced: lastSynced,
+                rowid: rowid,
+              ),
+          createCompanionCallback:
+              ({
+                required String remoteDeviceId,
+                required DateTime lastSynced,
+                Value<int> rowid = const Value.absent(),
+              }) => SyncCursorTableCompanion.insert(
+                remoteDeviceId: remoteDeviceId,
+                lastSynced: lastSynced,
+                rowid: rowid,
+              ),
+          withReferenceMapper: (p0) => p0
+              .map((e) => (e.readTable(table), BaseReferences(db, table, e)))
+              .toList(),
+          prefetchHooksCallback: null,
+        ),
+      );
+}
+
+typedef $$SyncCursorTableTableProcessedTableManager =
+    ProcessedTableManager<
+      _$AppDatabase,
+      $SyncCursorTableTable,
+      SyncCursor,
+      $$SyncCursorTableTableFilterComposer,
+      $$SyncCursorTableTableOrderingComposer,
+      $$SyncCursorTableTableAnnotationComposer,
+      $$SyncCursorTableTableCreateCompanionBuilder,
+      $$SyncCursorTableTableUpdateCompanionBuilder,
+      (
+        SyncCursor,
+        BaseReferences<_$AppDatabase, $SyncCursorTableTable, SyncCursor>,
+      ),
+      SyncCursor,
+      PrefetchHooks Function()
+    >;
 
 class $AppDatabaseManager {
   final _$AppDatabase _db;
@@ -1716,4 +2737,8 @@ class $AppDatabaseManager {
       $$EmployeeTableTableTableManager(_db, _db.employeeTable);
   $$AttendanceTableTableTableManager get attendanceTable =>
       $$AttendanceTableTableTableManager(_db, _db.attendanceTable);
+  $$ChangeLogTableTableTableManager get changeLogTable =>
+      $$ChangeLogTableTableTableManager(_db, _db.changeLogTable);
+  $$SyncCursorTableTableTableManager get syncCursorTable =>
+      $$SyncCursorTableTableTableManager(_db, _db.syncCursorTable);
 }
