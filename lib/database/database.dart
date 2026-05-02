@@ -433,7 +433,20 @@ class AppDatabase extends _$AppDatabase {
       await changeLogTable.insertOnConflictUpdate(logC);
 
       for (final a in attendances) {
-        await attendanceTable.insertOnConflictUpdate(a);
+        if (a.status == .empty) {
+          await attendanceTable.insertOnConflictUpdate(
+            AttendanceTableCompanion(
+              employeeId: Value(a.employeeId),
+              date: Value(a.date),
+              status: const Value(.empty),
+              enter: const Value(null),
+              leave: const Value(null),
+              lunchBreak: const Value(true),
+            ),
+          );
+        } else {
+          await attendanceTable.insertOnConflictUpdate(a);
+        }
       }
     });
   }
