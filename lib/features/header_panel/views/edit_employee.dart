@@ -174,6 +174,7 @@ class _EditEmployeeState extends State<EditEmployee> {
                 job: jobController.text,
                 team: team,
                 collected: collectedController.text.parseTime() ?? .zero,
+                createdAt: DateTime.now(),
               ),
             ),
           );
@@ -281,7 +282,7 @@ class _EditEmployeeState extends State<EditEmployee> {
         }
         return null;
       },
-      decoration: const InputDecoration(labelText: "sup", filled: true),
+      decoration: const InputDecoration(labelText: "sap", filled: true),
     );
   }
 

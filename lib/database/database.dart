@@ -118,6 +118,8 @@ class EmployeeTable extends Table {
       integer().map(const DurationConverter()).withDefault(const Constant(0))();
   DateTimeColumn get leaveDate => dateTime().nullable()();
   TextColumn get leaveReason => textEnum<LeaveReason>().nullable()();
+  DateTimeColumn get createdAt =>
+      dateTime().withDefault(Constant(DateTime.now()))();
 }
 
 @DataClassName('ChangeLog')
@@ -199,7 +201,7 @@ class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 6;
+  int get schemaVersion => 7;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -225,6 +227,9 @@ class AppDatabase extends _$AppDatabase {
       if (from < 6) {
         await m.createTable(syncCursorTable);
       }
+      if (from < 7) {
+        await m.addColumn(employeeTable, employeeTable.createdAt);
+      }
     },
     beforeOpen: (d) async {
       await customStatement('PRAGMA foreign_keys = ON;');
@@ -248,6 +253,7 @@ class AppDatabase extends _$AppDatabase {
           (employeeTable.leaveDate.isNull() |
               employeeTable.leaveDate.isBiggerOrEqualValue(start)),
     );
+    query.orderBy([OrderingTerm.asc(employeeTable.createdAt)]);
 
     final result = await query.get();
     final calendar = <int, CalendarRow>{};
@@ -343,6 +349,7 @@ class AppDatabase extends _$AppDatabase {
           job: Value(employee.job),
           collected: Value(employee.collected),
           leaveDate: Value(employee.leaveDate),
+          createdAt: Value(employee.createdAt),
         ),
       );
     });
