@@ -17,7 +17,7 @@ import 'package:path/path.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart';
 
-const _cellWidth = 65.0;
+const _cellWidth = 120.0;
 const _cellHeight = 55.0;
 
 class CalendarGrid extends StatelessWidget {
@@ -47,8 +47,10 @@ class CalendarGrid extends StatelessWidget {
           pinnedRowCount: 1,
           pinnedColumnCount: 1,
           diagonalDragBehavior: .free,
-          rowBuilder: (index) => _buildTableSpan(context, index, true),
-          columnBuilder: (index) => _buildTableSpan(context, index, false),
+          rowBuilder: (index) =>
+              _buildTableSpan(context, index, true),
+          columnBuilder: (index) =>
+              _buildTableSpan(context, index, false),
           cellBuilder: (context, vicinity) {
             if (vicinity.row == 0 && vicinity.column == 0) {
               return TableViewCell(
@@ -125,11 +127,10 @@ class CalendarGrid extends StatelessWidget {
   }
 
   TableSpan _buildTableSpan(BuildContext context, int index, bool isRow) {
-    final double width = index == 0 ? 110 : _cellWidth;
     final double height = index == 0 ? 45 : _cellHeight;
     final color = Theme.of(context).colorScheme.surfaceContainerHighest;
     return TableSpan(
-      extent: FixedSpanExtent(isRow ? height : width),
+      extent: FixedSpanExtent(isRow ? height : _cellWidth),
       backgroundDecoration: TableSpanDecoration(
         border: TableSpanBorder(
           leading: index == 0 ? BorderSide(color: color) : BorderSide.none,

@@ -9,7 +9,7 @@ import 'package:flutter/material.dart';
 import 'package:flutter_bloc/flutter_bloc.dart';
 import 'package:two_dimensional_scrollables/two_dimensional_scrollables.dart';
 
-const _cellWidth = 65.0;
+const _cellWidth = 120.0;
 const _cellHeight = 55.0;
 
 class AttendanceCell extends StatelessWidget {
@@ -150,8 +150,8 @@ class AttendanceCell extends StatelessWidget {
               child: switch (attendance?.status) {
                 null || .empty => const SizedBox.shrink(),
                 .p => Center(
-                  child: Column(
-                    mainAxisAlignment: .center,
+                  child: Row(
+                    mainAxisAlignment: .spaceEvenly,
                     crossAxisAlignment: .center,
                     children: [
                       Text(
@@ -161,7 +161,7 @@ class AttendanceCell extends StatelessWidget {
                           letterSpacing: 1,
                         ),
                       ),
-                      const SizedBox(width: 40, child: Divider(height: 8)),
+                      const SizedBox(height: 30, child: VerticalDivider(width: 3)),
                       Text(
                         attendance.leave?.displayTime() ?? '--:--',
                         style: const TextStyle(
