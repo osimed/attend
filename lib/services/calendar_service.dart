@@ -2,7 +2,7 @@ import 'dart:typed_data';
 
 import 'package:attend/core/extensions.dart';
 import 'package:attend/database/database.dart';
-import 'package:flutter/material.dart' show DateUtils;
+import 'package:flutter/material.dart' show DateUtils, Colors;
 import 'package:pdf/pdf.dart';
 import 'package:pdf/widgets.dart' as pw;
 
@@ -191,12 +191,50 @@ class CalendarService {
           ),
         ),
         for (int day = half.$1; day <= half.$2; day++)
-          ...dayCells(row.attendances[day], month.copyWith(day: day)),
+          ...dayCells(
+            row,
+            row.attendances[day],
+            month.copyWith(day: day),
+            half.$2,
+          ),
       ],
     );
   }
 
-  List<pw.Widget> dayCells(Attendance? attendance, DateTime date) {
+  List<pw.Widget> dayCells(
+    CalendarRow row,
+    Attendance? attendance,
+    DateTime date,
+    int end,
+  ) {
+    final leaveDate = row.employee.leaveDate;
+    final leaveReason = row.employee.leaveReason;
+    int? leaveDay;
+    if (leaveDate != null &&
+        leaveDate.year == date.year &&
+        leaveDate.month == date.month) {
+      leaveDay = leaveDate.day;
+    }
+    final day = date.day;
+    if (leaveDay != null && leaveDay == day) {
+      final l = 2 * (end - day + 1);
+      return [
+        pw.TableCell(
+          columnSpan: l,
+          child: pw.Container(
+            color: PdfColor.fromInt(Colors.lime.toARGB32()),
+            child: pw.Center(
+              child: pw.Text(
+                leaveReason?.fullname ?? '',
+                style: pw.TextStyle(fontSize: l <= 6 ? 7 : 11),
+              ),
+            ),
+          ),
+        ),
+      ];
+    }
+    if (leaveDay != null && leaveDay < day) return [];
+
     final status = attendance?.status ?? .empty;
     final isSunday = date.weekday == DateTime.sunday;
     if (status == .empty && isSunday) {
