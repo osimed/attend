@@ -312,7 +312,7 @@ class AppDatabase extends _$AppDatabase {
           );
       await changeLogTable.insertOnConflictUpdate(logC);
 
-      attendanceTable.insertOnConflictUpdate(
+      await attendanceTable.insertOnConflictUpdate(
         AttendanceTableCompanion(
           employeeId: Value(attendance.employeeId),
           date: Value(attendance.date),
@@ -467,10 +467,10 @@ class AppDatabase extends _$AppDatabase {
           switch (entry.operation) {
             case 'save':
               final atten = Attendance.fromJson(payload["attendance"]);
-              saveAttendance(atten, log: entry);
+              await saveAttendance(atten, log: entry);
             case 'bulk-save':
               final attens = payload["attendances"] as List;
-              saveBulkAttendances(
+              await saveBulkAttendances(
                 attens.map((a) => Attendance.fromJson(a)).toList(),
                 log: entry,
               );
@@ -479,15 +479,17 @@ class AppDatabase extends _$AppDatabase {
           switch (entry.operation) {
             case 'save':
               final empl = Employee.fromJson(payload["employee"]);
-              saveEmployee(empl, log: entry);
+              await saveEmployee(empl, log: entry);
             case 'delete':
               final empl = Employee.fromJson(payload["employee"]);
-              deleteEmployee(empl, log: entry);
+              await deleteEmployee(empl, log: entry);
             case 'layoff':
               final emplId = payload["employeeId"] as int;
-              final date = DateTime.tryParse(payload["date"]);
+              final date = payload["date"] != null
+                  ? DateTime.tryParse(payload["date"])
+                  : null;
               final reason = LeaveReason.from(payload["reason"]);
-              layoffEmployee(emplId, date, reason, log: entry);
+              await layoffEmployee(emplId, date, reason, log: entry);
           }
       }
     }
@@ -502,8 +504,21 @@ class AppDatabase extends _$AppDatabase {
 
     return (select(changeLogTable)
           ..where((t) => t.timestamp.isBiggerThanValue(lastSynced))
-          ..orderBy([(t) => OrderingTerm.asc(t.timestamp)]))
+          ..orderBy([(t) => OrderingTerm.asc(t.timestamp)])
+          ..limit(1000))
         .get();
+  }
+
+  Future<void> updateSyncCursor(
+    String remoteDeviceId,
+    DateTime lastSynced,
+  ) async {
+    await syncCursorTable.insertOnConflictUpdate(
+      SyncCursorTableCompanion(
+        remoteDeviceId: Value(remoteDeviceId),
+        lastSynced: Value(lastSynced),
+      ),
+    );
   }
 
   static QueryExecutor _openConnection() {

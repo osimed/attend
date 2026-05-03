@@ -90,33 +90,42 @@ class DatabaseSyncBloc extends Bloc<DatabaseSyncEvent, DatabaseSyncState> {
     );
     final id = event.device.id;
     final host = event.device.host;
-    final logs = await _attendService.getChangeLogs(id);
     final info = await deviceInfo();
     final device = {"id": info.$1, "name": info.$2};
-    try {
-      io.HttpClient client = io.HttpClient();
-      final url = Uri.parse('http://$host:$port/sync');
-      final req = await client.postUrl(url);
-      final payload = jsonEncode({"logs": logs, "device": device});
-      req.add(utf8.encoder.convert(payload));
-      await req.flush();
-      final resp = await req.close();
-      if (resp.statusCode != 200) throw Exception();
-      final respStr = resp.transform(utf8.decoder).join();
-      final data = jsonDecode(await respStr);
-      if (data is! Map<String, dynamic>) return;
-      final remoteChanges = data["logs"] as List;
-      final remoteLogs = remoteChanges.map((l) => ChangeLog.fromJson(l));
-      await _attendService.syncRemoteChanges(remoteLogs.toList());
-    } catch (_) {
-      emit(
-        DatabaseSyncSyncedMode(
-          isRunning: state.isRunning,
-          device: event.device,
-          isSuccess: false,
-        ),
-      );
-      return;
+    bool allSynced = false;
+
+    while (!allSynced) {
+      final logs = await _attendService.getChangeLogs(id);
+      try {
+        io.HttpClient client = io.HttpClient();
+        final url = Uri.parse('http://$host:$port/sync');
+        final req = await client.postUrl(url);
+        final payload = jsonEncode({"logs": logs, "device": device});
+        req.add(utf8.encoder.convert(payload));
+        await req.flush();
+        final resp = await req.close();
+        if (resp.statusCode != 200) throw Exception();
+        final ts = logs.isNotEmpty ? logs.last.timestamp : DateTime.now();
+        await _attendService.updateSyncCursor(id, ts);
+
+        final respStr = resp.transform(utf8.decoder).join();
+        final data = jsonDecode(await respStr);
+        if (data is! Map<String, dynamic>) return;
+        final rChanges = data["logs"] as List;
+        final rLogs = rChanges.map((l) => ChangeLog.fromJson(l)).toList();
+        await _attendService.syncRemoteChanges(rLogs);
+
+        allSynced = rLogs.length < 1000 && logs.length < 1000;
+      } catch (_) {
+        emit(
+          DatabaseSyncSyncedMode(
+            isRunning: state.isRunning,
+            device: event.device,
+            isSuccess: false,
+          ),
+        );
+        return;
+      }
     }
     emit(
       DatabaseSyncSyncedMode(

@@ -21,20 +21,7 @@ class DBSyncService {
       server ??= await HttpServer.bind(ip, port);
       if (server == null) return false;
       await for (final req in server!) {
-        try {
-          if (req.method == 'GET' && req.requestedUri.path == '/info') {
-            await serveDeviceInfo(req);
-            continue;
-          }
-          if (req.method == 'POST' && req.requestedUri.path == '/sync') {
-            await serveSyncDatabase(req);
-            continue;
-          }
-        } catch (_) {
-          req.response.statusCode = 500;
-          await req.response.flush();
-          await req.response.close();
-        }
+        _handleRequest(req);
       }
     } catch (_) {
       return false;
@@ -79,9 +66,31 @@ class DBSyncService {
       req.response.write(jsonEncode({"logs": dLogs}));
       await req.response.flush();
       await req.response.close();
+
+      final ts = dLogs.isNotEmpty ? dLogs.last.timestamp : DateTime.now();
+      await _attendService.updateSyncCursor(remoteDeviceId, ts);
       _ctrl.add('synced#$remoteDeviceId#$remoteDeviceName#true');
     } catch (_) {
       _ctrl.add('synced#$remoteDeviceId#$remoteDeviceName#false');
+    }
+  }
+
+  void _handleRequest(HttpRequest req) async {
+    try {
+      if (req.method == 'GET' && req.requestedUri.path == '/info') {
+        await serveDeviceInfo(req);
+        return;
+      }
+      if (req.method == 'POST' && req.requestedUri.path == '/sync') {
+        await serveSyncDatabase(req);
+        return;
+      }
+      req.response.statusCode = 404;
+    } catch (_) {
+      req.response.statusCode = 500;
+    } finally {
+      await req.response.flush();
+      await req.response.close();
     }
   }
 }

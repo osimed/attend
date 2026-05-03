@@ -48,6 +48,10 @@ class AttendService {
     return _database.syncRemoteChanges(changes);
   }
 
+  Future<void> updateSyncCursor(String remoteDeviceId, DateTime lastSynced) async {
+    return _database.updateSyncCursor(remoteDeviceId, lastSynced);
+  }
+
   Duration? calcTimeDiff(Attendance? attendance) {
     if (attendance == null) return null;
     final date = attendance.date;
