@@ -161,7 +161,10 @@ class AttendanceCell extends StatelessWidget {
                           letterSpacing: 1,
                         ),
                       ),
-                      const SizedBox(height: 30, child: VerticalDivider(width: 3)),
+                      const SizedBox(
+                        height: 30,
+                        child: VerticalDivider(width: 3),
+                      ),
                       Text(
                         attendance.leave?.displayTime() ?? '--:--',
                         style: const TextStyle(

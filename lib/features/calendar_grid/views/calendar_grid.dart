@@ -47,10 +47,8 @@ class CalendarGrid extends StatelessWidget {
           pinnedRowCount: 1,
           pinnedColumnCount: 1,
           diagonalDragBehavior: .free,
-          rowBuilder: (index) =>
-              _buildTableSpan(context, index, true),
-          columnBuilder: (index) =>
-              _buildTableSpan(context, index, false),
+          rowBuilder: (index) => _buildTableSpan(context, index, true),
+          columnBuilder: (index) => _buildTableSpan(context, index, false),
           cellBuilder: (context, vicinity) {
             if (vicinity.row == 0 && vicinity.column == 0) {
               return TableViewCell(

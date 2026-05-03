@@ -48,7 +48,10 @@ class AttendService {
     return _database.syncRemoteChanges(changes);
   }
 
-  Future<void> updateSyncCursor(String remoteDeviceId, DateTime lastSynced) async {
+  Future<void> updateSyncCursor(
+    String remoteDeviceId,
+    DateTime lastSynced,
+  ) async {
     return _database.updateSyncCursor(remoteDeviceId, lastSynced);
   }
 

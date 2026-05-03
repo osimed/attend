@@ -67,6 +67,7 @@ class ExportService {
         leaveDay = leaveDate.day;
       }
 
+      List<Duration> leftoverSum = [];
       for (int day = 1; day <= daysInMonth; day++) {
         final date = DateTime(month.year, month.month, day);
         Attendance? attendance = row.attendances[day];
@@ -92,6 +93,12 @@ class ExportService {
           weekSum.addAll([weekRecup, weekSupp]);
           weekRecup = weekSupp = .zero;
         }
+        if (day == daysInMonth) {
+          if (weekRecup != .zero || weekSupp != .zero) {
+            leftoverSum.addAll([weekRecup, weekSupp]);
+            weekRecup = weekSupp = .zero;
+          }
+        }
 
         if (status == .r) rDays += status!.dayValue(date);
         if (status == .c) cDays += status!.dayValue(date);
@@ -108,6 +115,20 @@ class ExportService {
           ),
         );
       }
+      if (leftoverSum.isNotEmpty) {
+        days.add(
+          _DayData(
+            day: null,
+            date: DateTime.now(),
+            attendance: null,
+            diff: null,
+            weekSum: leftoverSum,
+            isLeaveDate: false,
+            leaveReason: '',
+          ),
+        );
+      }
+
       final initCollected = row.employee.collected;
       final prevCollected = _attendService.calcCollected(
         prevAttns[row.employee.id],
@@ -220,7 +241,7 @@ class ExportService {
       return pw.TableRow(
         children: [
           _dataCell(
-            d.day.toString(),
+            d.day?.toString() ?? '',
             style: _boldCellStyle,
             align: pw.Alignment.center,
           ),
@@ -246,7 +267,7 @@ class ExportService {
     final String reason;
 
     bool isStatusDisplay = false;
-    if (isWeekTotal) {
+    if (isWeekTotal && d.day != null) {
       start = 'DIM';
       end = 'DIM';
       reason = '';
@@ -284,7 +305,7 @@ class ExportService {
       decoration: pw.BoxDecoration(color: bg),
       children: [
         _dataCell(
-          d.day.toString(),
+          d.day?.toString() ?? '',
           style: _boldCellStyle,
           align: pw.Alignment.center,
         ),
@@ -327,7 +348,7 @@ class ExportService {
               ? _weekTotalStyle.copyWith(color: PdfColors.red600)
               : null,
         ),
-        _dataCell(isWeekTotal ? 'DIM' : '', align: .center),
+        _dataCell(isWeekTotal && d.day != null ? 'DIM' : '', align: .center),
         _dataCell(reason),
       ],
     );
@@ -414,7 +435,7 @@ class ExportService {
 }
 
 class _DayData {
-  final int day;
+  final int? day;
   final DateTime date;
   final Attendance? attendance;
   final Duration? diff;
