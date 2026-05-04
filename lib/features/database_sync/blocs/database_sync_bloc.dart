@@ -105,8 +105,6 @@ class DatabaseSyncBloc extends Bloc<DatabaseSyncEvent, DatabaseSyncState> {
         await req.flush();
         final resp = await req.close();
         if (resp.statusCode != 200) throw Exception();
-        final ts = logs.isNotEmpty ? logs.last.timestamp : DateTime.now();
-        await _attendService.updateSyncCursor(id, ts);
 
         final respStr = resp.transform(utf8.decoder).join();
         final data = jsonDecode(await respStr);
@@ -114,6 +112,8 @@ class DatabaseSyncBloc extends Bloc<DatabaseSyncEvent, DatabaseSyncState> {
         final rChanges = data["logs"] as List;
         final rLogs = rChanges.map((l) => ChangeLog.fromJson(l)).toList();
         await _attendService.syncRemoteChanges(rLogs);
+        final ts = rLogs.isNotEmpty ? rLogs.last.timestamp : DateTime.now();
+        await _attendService.updateSyncCursor(id, ts);
 
         allSynced = rLogs.length < 1000 && logs.length < 1000;
       } catch (_) {

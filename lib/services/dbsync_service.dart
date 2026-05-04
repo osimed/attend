@@ -60,6 +60,8 @@ class DBSyncService {
       final logs = data["logs"] as List;
       final changes = logs.map((l) => ChangeLog.fromJson(l));
       await _attendService.syncRemoteChanges(changes.toList());
+      final ts = changes.isNotEmpty ? changes.last.timestamp : DateTime.now();
+      await _attendService.updateSyncCursor(remoteDeviceId, ts);
 
       // send local logs
       final dLogs = await _attendService.getChangeLogs(remoteDeviceId);
@@ -67,8 +69,6 @@ class DBSyncService {
       await req.response.flush();
       await req.response.close();
 
-      final ts = dLogs.isNotEmpty ? dLogs.last.timestamp : DateTime.now();
-      await _attendService.updateSyncCursor(remoteDeviceId, ts);
       _ctrl.add('synced#$remoteDeviceId#$remoteDeviceName#true');
     } catch (_) {
       _ctrl.add('synced#$remoteDeviceId#$remoteDeviceName#false');
