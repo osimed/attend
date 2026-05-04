@@ -66,8 +66,6 @@ class DBSyncService {
       // send local logs
       final dLogs = await _attendService.getChangeLogs(remoteDeviceId);
       req.response.write(jsonEncode({"logs": dLogs}));
-      await req.response.flush();
-      await req.response.close();
 
       _ctrl.add('synced#$remoteDeviceId#$remoteDeviceName#true');
     } catch (_) {
