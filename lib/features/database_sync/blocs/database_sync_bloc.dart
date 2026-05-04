@@ -96,8 +96,8 @@ class DatabaseSyncBloc extends Bloc<DatabaseSyncEvent, DatabaseSyncState> {
 
     while (!allSynced) {
       final logs = await _attendService.getChangeLogs(id);
+      io.HttpClient client = io.HttpClient();
       try {
-        io.HttpClient client = io.HttpClient();
         final url = Uri.parse('http://$host:$port/sync');
         final req = await client.postUrl(url);
         final payload = jsonEncode({"logs": logs, "device": device});
@@ -125,6 +125,8 @@ class DatabaseSyncBloc extends Bloc<DatabaseSyncEvent, DatabaseSyncState> {
           ),
         );
         return;
+      } finally {
+        client.close(force: true);
       }
     }
     emit(
