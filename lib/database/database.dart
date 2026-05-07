@@ -110,6 +110,7 @@ enum LeaveReason {
 @DataClassName('Employee')
 class EmployeeTable extends Table {
   IntColumn get id => integer().autoIncrement()();
+  IntColumn get sap => integer().unique()();
   TextColumn get firstName => text()();
   TextColumn get lastName => text()();
   TextColumn get team => textEnum<Team>()();
@@ -118,6 +119,7 @@ class EmployeeTable extends Table {
       integer().map(const DurationConverter()).withDefault(const Constant(0))();
   DateTimeColumn get leaveDate => dateTime().nullable()();
   TextColumn get leaveReason => textEnum<LeaveReason>().nullable()();
+  IntColumn get sortOrder => integer().withDefault(const Constant(0))();
   DateTimeColumn get createdAt =>
       dateTime().withDefault(Constant(DateTime.now()))();
 }
@@ -133,6 +135,17 @@ class ChangeLogTable extends Table {
 
   @override
   Set<Column> get primaryKey => {id};
+}
+
+@DataClassName('MonthlyBalance')
+class MonthlyBalanceTable extends Table {
+  IntColumn get employeeId =>
+      integer().references(EmployeeTable, #id, onDelete: .cascade)();
+  DateTimeColumn get month => dateTime()();
+  IntColumn get closingBalence => integer().map(const DurationConverter())();
+
+  @override
+  Set<Column> get primaryKey => {employeeId, month};
 }
 
 @DataClassName('SyncCursor')
@@ -195,13 +208,19 @@ class CalendarRow {
 }
 
 @DriftDatabase(
-  tables: [EmployeeTable, AttendanceTable, ChangeLogTable, SyncCursorTable],
+  tables: [
+    EmployeeTable,
+    AttendanceTable,
+    MonthlyBalanceTable,
+    ChangeLogTable,
+    SyncCursorTable,
+  ],
 )
 class AppDatabase extends _$AppDatabase {
   AppDatabase() : super(_openConnection());
 
   @override
-  int get schemaVersion => 7;
+  int get schemaVersion => 8;
 
   @override
   MigrationStrategy get migration => MigrationStrategy(
@@ -230,6 +249,11 @@ class AppDatabase extends _$AppDatabase {
       if (from < 7) {
         await m.addColumn(employeeTable, employeeTable.createdAt);
       }
+      if (from < 8) {
+        await m.addColumn(employeeTable, employeeTable.sap);
+        await m.addColumn(employeeTable, employeeTable.sortOrder);
+        await m.createTable(monthlyBalanceTable);
+      }
     },
     beforeOpen: (d) async {
       await customStatement('PRAGMA foreign_keys = ON;');
@@ -253,7 +277,7 @@ class AppDatabase extends _$AppDatabase {
           (employeeTable.leaveDate.isNull() |
               employeeTable.leaveDate.isBiggerOrEqualValue(start)),
     );
-    query.orderBy([OrderingTerm.asc(employeeTable.createdAt)]);
+    query.orderBy([OrderingTerm.asc(employeeTable.sortOrder)]);
 
     final result = await query.get();
     final calendar = <int, CalendarRow>{};
@@ -273,8 +297,9 @@ class AppDatabase extends _$AppDatabase {
 
   Future<Map<int, List<Attendance>>> getAttendancesUpToMonth(
     Team team,
-    DateTime month,
-  ) async {
+    DateTime month, {
+    int? employeeId,
+  }) async {
     final query = select(employeeTable).join([
       leftOuterJoin(
         attendanceTable,
@@ -282,6 +307,9 @@ class AppDatabase extends _$AppDatabase {
             attendanceTable.date.isSmallerThanValue(month),
       ),
     ]);
+    if (employeeId != null) {
+      query.where(employeeTable.id.equals(employeeId));
+    }
     query.where(employeeTable.team.equalsValue(team));
 
     final result = await query.get();
@@ -343,6 +371,7 @@ class AppDatabase extends _$AppDatabase {
       employeeTable.insertOnConflictUpdate(
         EmployeeTableCompanion(
           id: employee.id != -1 ? Value(employee.id) : const Value.absent(),
+          sap: Value(employee.sap),
           firstName: Value(employee.firstName),
           lastName: Value(employee.lastName),
           team: Value(employee.team),
@@ -490,6 +519,20 @@ class AppDatabase extends _$AppDatabase {
                   : null;
               final reason = LeaveReason.from(payload["reason"]);
               await layoffEmployee(emplId, date, reason, log: entry);
+            case 'reorder':
+              final empls = payload["employees"] as List;
+              await reorderEmployees(
+                empls.map((e) => Employee.fromJson(e)).toList(),
+                log: entry,
+              );
+          }
+        case 'monthly-balance':
+          switch (entry.operation) {
+            case 'save':
+              final emplId = payload["employeeId"] as int;
+              final month = DateTime.parse(payload["month"]);
+              final balance = Duration(minutes: payload["balance"]);
+              await saveMonthlyBalance(emplId, month, balance, log: entry);
           }
       }
     }
@@ -519,6 +562,87 @@ class AppDatabase extends _$AppDatabase {
         lastSynced: Value(lastSynced),
       ),
     );
+  }
+
+  Future<void> reorderEmployees(
+    List<Employee> employees, {
+    ChangeLog? log,
+  }) async {
+    await transaction(() async {
+      // log the action
+      final logC =
+          log?.toCompanion(true) ??
+          ChangeLogTableCompanion(
+            id: Value(const Uuid().v7()),
+            deviceId: Value((await deviceInfo()).$1),
+            timestamp: Value(DateTime.now()),
+            table: const Value('employee'),
+            operation: const Value('reorder'),
+            payload: Value(
+              jsonEncode({
+                'employees': employees.map((a) => a.toJson()).toList(),
+              }),
+            ),
+          );
+      await changeLogTable.insertOnConflictUpdate(logC);
+
+      for (int i = 0; i < employees.length; i++) {
+        await (update(employeeTable)
+              ..where((e) => e.id.equals(employees[i].id)))
+            .write(EmployeeTableCompanion(sortOrder: Value(i)));
+      }
+    });
+  }
+
+  Future<void> saveMonthlyBalance(
+    int employeeId,
+    DateTime month,
+    Duration balance, {
+    ChangeLog? log,
+  }) async {
+    transaction(() async {
+      // log the action
+      final logC =
+          log?.toCompanion(true) ??
+          ChangeLogTableCompanion(
+            id: Value(const Uuid().v7()),
+            deviceId: Value((await deviceInfo()).$1),
+            timestamp: Value(DateTime.now()),
+            table: const Value('monthly-balance'),
+            operation: const Value('save'),
+            payload: Value(
+              jsonEncode({
+                'employeeId': employeeId,
+                'month': month.toIso8601String(),
+                'balance': balance.inMinutes,
+              }),
+            ),
+          );
+      await changeLogTable.insertOnConflictUpdate(logC);
+
+      await monthlyBalanceTable.insertOnConflictUpdate(
+        MonthlyBalanceTableCompanion(
+          employeeId: Value(employeeId),
+          month: Value(DateTime(month.year, month.month)),
+          closingBalence: Value(balance),
+        ),
+      );
+    });
+  }
+
+  Future<MonthlyBalance?> getLastMonthlyBalance(
+    int employeeId,
+    DateTime before,
+  ) async {
+    return (select(monthlyBalanceTable)
+          ..where(
+            (t) =>
+                t.employeeId.equals(employeeId) &
+                t.month.isSmallerThanValue(DateTime(before.year, before.month)),
+          )
+          ..orderBy([(t) => OrderingTerm.desc(t.month)])
+          ..limit(1))
+        .getSingleOrNull();
   }
 
   static QueryExecutor _openConnection() {

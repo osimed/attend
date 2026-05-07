@@ -12,6 +12,7 @@ class CalendarGridBloc extends Bloc<CalendarGridEvent, CalendarGridState> {
     on<RefreshCalendarCell>(_onRefreshCalendarCell);
     on<CalcAttendanceDiff>(_onCalcAttendanceDiff);
     on<BulkSaveAttendances>(_onBulkSaveAttendances);
+    on<ReorderEmployees>(_onReorderEmployees);
   }
 
   Future<void> _onLoadMonthlyCalendar(
@@ -96,6 +97,24 @@ class CalendarGridBloc extends Bloc<CalendarGridEvent, CalendarGridState> {
         team: state.team,
         month: state.month,
         calendar: calendar,
+      ),
+    );
+  }
+
+  Future<void> _onReorderEmployees(
+    ReorderEmployees event,
+    Emitter<CalendarGridState> emit,
+  ) async {
+    final list = List<CalendarRow>.from(state.calendar);
+    final moved = list.removeAt(event.oldIndex);
+    list.insert(event.newIndex, moved);
+    final employees = list.map((r) => r.employee).toList();
+    await _attendService.reorderEmployees(employees);
+    emit(
+      MonthlyCalendarLoaded(
+        team: state.team,
+        month: state.month,
+        calendar: list,
       ),
     );
   }

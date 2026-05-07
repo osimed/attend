@@ -35,9 +35,14 @@ class AttendService {
 
   Future<Map<int, List<Attendance>>> getAttendancesUpToMonth(
     Team team,
-    DateTime month,
-  ) async {
-    return _database.getAttendancesUpToMonth(team, month);
+    DateTime month, {
+    int? employeeId,
+  }) async {
+    return _database.getAttendancesUpToMonth(
+      team,
+      month,
+      employeeId: employeeId,
+    );
   }
 
   Future<List<ChangeLog>> getChangeLogs(String remoteDeviceId) async {
@@ -53,6 +58,52 @@ class AttendService {
     DateTime lastSynced,
   ) async {
     return _database.updateSyncCursor(remoteDeviceId, lastSynced);
+  }
+
+  Duration _calcRowTotal(CalendarRow row) {
+    return row.attendances.values.fold(
+      .zero,
+      (sum, a) => sum + (calcTimeDiff(a) ?? .zero),
+    );
+  }
+
+  Future<Duration> calcOpeningBalance(Employee employee, DateTime month) async {
+    final snapshot = await _database.getLastMonthlyBalance(
+      employee.id,
+      DateTime(month.year, month.month),
+    );
+    if (snapshot != null) {
+      final snapshotNextMonth = DateTime(
+        snapshot.month.year,
+        snapshot.month.month + 1,
+      );
+      if (snapshotNextMonth.year == month.year &&
+          snapshotNextMonth.month == month.month) {
+        return snapshot.closingBalence;
+      }
+      final allAttns = await _database.getAttendancesUpToMonth(
+        employee.team,
+        DateTime(month.year, month.month),
+        employeeId: employee.id,
+      );
+      final gapAttns = (allAttns[employee.id] ?? [])
+          .where((a) => !a.date.isBefore(snapshotNextMonth))
+          .toList();
+      return snapshot.closingBalence + calcCollected(gapAttns);
+    }
+
+    final allAttns = await _database.getAttendancesUpToMonth(
+      employee.team,
+      DateTime(month.year, month.month),
+      employeeId: employee.id,
+    );
+    return employee.collected + calcCollected(allAttns[employee.id] ?? []);
+  }
+
+  Future<void> closeMonth(CalendarRow row, DateTime month) async {
+    final opening = await calcOpeningBalance(row.employee, month);
+    final closing = opening + _calcRowTotal(row);
+    return _database.saveMonthlyBalance(row.employee.id, month, closing);
   }
 
   Duration? calcTimeDiff(Attendance? attendance) {
@@ -99,6 +150,10 @@ class AttendService {
 
   Future<void> saveBulkAttendances(List<Attendance> attendances) async {
     return _database.saveBulkAttendances(attendances);
+  }
+
+  Future<void> reorderEmployees(List<Employee> employees) async {
+    return _database.reorderEmployees(employees);
   }
 }
 

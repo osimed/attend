@@ -161,7 +161,7 @@ class CalendarService {
           width: 36,
           child: pw.Center(
             child: pw.Text(
-              row.employee.id.toString(),
+              row.employee.sap.toString(),
               style: const pw.TextStyle(fontSize: 5),
             ),
           ),

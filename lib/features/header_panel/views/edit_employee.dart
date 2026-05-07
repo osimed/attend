@@ -18,15 +18,14 @@ class EditEmployee extends StatefulWidget {
 
 class _EditEmployeeState extends State<EditEmployee> {
   final formKey = GlobalKey<FormState>();
-  late int? currentEmployeeId = widget.employee?.id;
   late final firstNameController = TextEditingController(
     text: widget.employee?.firstName,
   );
   late final lastNameController = TextEditingController(
     text: widget.employee?.lastName,
   );
-  late final idController = TextEditingController(
-    text: widget.employee?.id.toString(),
+  late final sapController = TextEditingController(
+    text: widget.employee?.sap.toString(),
   );
   late final jobController = TextEditingController(text: widget.employee?.job);
   late final suggestionsController = SuggestionsController<String>();
@@ -40,8 +39,7 @@ class _EditEmployeeState extends State<EditEmployee> {
     return BlocListener<HeaderPanelBloc, HeaderPanelState>(
       listener: (context, state) {
         if (state is EditingEmployee) {
-          currentEmployeeId = state.employee?.id;
-          idController.text = currentEmployeeId?.toString() ?? '';
+          sapController.text = state.employee?.sap.toString() ?? '';
           firstNameController.text = state.employee?.firstName ?? '';
           lastNameController.text = state.employee?.lastName ?? '';
           jobController.text = state.employee?.job ?? '';
@@ -168,12 +166,14 @@ class _EditEmployeeState extends State<EditEmployee> {
           context.read<HeaderPanelBloc>().add(
             SaveEmployee(
               Employee(
-                id: currentEmployeeId ?? int.parse(idController.text),
+                id: widget.employee?.id ?? -1,
+                sap: int.parse(sapController.text),
                 firstName: firstNameController.text,
                 lastName: lastNameController.text,
                 job: jobController.text,
                 team: team,
                 collected: collectedController.text.parseTime() ?? .zero,
+                sortOrder: DateTime.now().millisecondsSinceEpoch,
                 createdAt: DateTime.now(),
               ),
             ),
@@ -268,11 +268,10 @@ class _EditEmployeeState extends State<EditEmployee> {
 
   TextFormField buildIdTextField() {
     return TextFormField(
-      controller: idController,
+      controller: sapController,
       onTapOutside: (_) {
         FocusScope.of(context).unfocus();
       },
-      readOnly: currentEmployeeId != null,
       validator: (value) {
         if (value?.isEmpty ?? true) {
           return 'Ce champ est obligatoire';
@@ -306,7 +305,7 @@ class _EditEmployeeState extends State<EditEmployee> {
           decoration: const InputDecoration(labelText: 'poste', filled: true),
         );
       },
-      hideOnEmpty: false,
+      hideOnEmpty: true,
       suggestionsCallback: (s) {
         if (s.isNotEmpty) return [];
         return _jobSuggestions(team);
@@ -361,7 +360,7 @@ class _EditEmployeeState extends State<EditEmployee> {
   void dispose() {
     firstNameController.dispose();
     lastNameController.dispose();
-    idController.dispose();
+    sapController.dispose();
     jobController.dispose();
     suggestionsController.dispose();
     collectedController.dispose();

@@ -35,3 +35,10 @@ class BulkSaveAttendances extends CalendarGridEvent {
     required this.template,
   });
 }
+
+class ReorderEmployees extends CalendarGridEvent {
+  final int oldIndex;
+  final int newIndex;
+
+  ReorderEmployees({required this.oldIndex, required this.newIndex});
+}

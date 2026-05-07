@@ -47,7 +47,12 @@ class ExportService {
     final daysInMonth = DateUtils.getDaysInMonth(month.year, month.month);
 
     final team = rows.first.employee.team;
-    final prevAttns = await _attendService.getAttendancesUpToMonth(team, month);
+    final singleId = rows.singleOrNull?.employee.id;
+    final prevAttns = await _attendService.getAttendancesUpToMonth(
+      team,
+      month,
+      employeeId: singleId,
+    );
 
     for (final row in rows) {
       final List<_DayData> days = [];
@@ -202,7 +207,7 @@ class ExportService {
       height: 30,
       child: pw.Row(
         children: [
-          field('SAP', employee.id.toString(), flex: 0.8),
+          field('SAP', employee.sap.toString(), flex: 0.8),
           field(
             'NOM PRÉNOM',
             '${employee.lastName.toUpperCase()} ${employee.firstName.toUpperCase()}',

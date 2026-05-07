@@ -52,7 +52,26 @@ class CalendarGrid extends StatelessWidget {
           cellBuilder: (context, vicinity) {
             if (vicinity.row == 0 && vicinity.column == 0) {
               return TableViewCell(
-                child: buildGridTeamSelector(state, context),
+                child: Row(
+                  children: [
+                    InkWell(
+                      onTap: () {
+                        showReorderEmployeesBottomSheet(context);
+                      },
+                      child: const Padding(
+                        padding: EdgeInsets.all(8.0),
+                        child: Icon(Icons.filter_list),
+                      ),
+                    ),
+                    VerticalDivider(
+                      width: 1,
+                      color: Theme.of(
+                        context,
+                      ).colorScheme.surfaceContainerHighest,
+                    ),
+                    Expanded(child: buildGridTeamSelector(state, context)),
+                  ],
+                ),
               );
             }
             if (vicinity.row == 0) {
@@ -103,12 +122,50 @@ class CalendarGrid extends StatelessWidget {
     );
   }
 
+  Future<dynamic> showReorderEmployeesBottomSheet(BuildContext context) {
+    return showModalBottomSheet(
+      context: context,
+      builder: (_) => BlocProvider.value(
+        value: context.read<CalendarGridBloc>(),
+        child: BlocBuilder<CalendarGridBloc, CalendarGridState>(
+          buildWhen: (_, newState) => newState is MonthlyCalendarLoaded,
+          builder: (context, state) {
+            return Padding(
+              padding: const EdgeInsets.all(8.0),
+              child: ReorderableListView.builder(
+                itemBuilder: (_, i) {
+                  final empl = state.calendar[i].employee;
+                  return ListTile(
+                    key: ValueKey(empl.id),
+                    leading: const Icon(Icons.drag_handle),
+                    title: Text(
+                      '${empl.lastName} ${empl.firstName}',
+                      style: const TextStyle(fontWeight: .w800, fontSize: 20),
+                    ),
+                    subtitle: Text(empl.job),
+                  );
+                },
+                itemCount: state.calendar.length,
+                onReorder: (oldIdx, newIdx) {
+                  if (newIdx > oldIdx) newIdx--;
+                  context.read<CalendarGridBloc>().add(
+                    ReorderEmployees(oldIndex: oldIdx, newIndex: newIdx),
+                  );
+                },
+              ),
+            );
+          },
+        ),
+      ),
+    );
+  }
+
   Padding buildGridTeamSelector(
     MonthlyCalendarLoaded state,
     BuildContext context,
   ) {
     return Padding(
-      padding: const EdgeInsets.all(8.0),
+      padding: const EdgeInsets.only(left: 10, right: 3),
       child: DropdownButton<Team>(
         isExpanded: true,
         value: state.team,
