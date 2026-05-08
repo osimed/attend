@@ -60,7 +60,7 @@ class AttendService {
     return _database.updateSyncCursor(remoteDeviceId, lastSynced);
   }
 
-  Duration _calcRowTotal(CalendarRow row) {
+  Duration calcRowTotal(CalendarRow row) {
     return row.attendances.values.fold(
       .zero,
       (sum, a) => sum + (calcTimeDiff(a) ?? .zero),
@@ -100,9 +100,18 @@ class AttendService {
     return employee.collected + calcCollected(allAttns[employee.id] ?? []);
   }
 
-  Future<void> closeMonth(CalendarRow row, DateTime month) async {
-    final opening = await calcOpeningBalance(row.employee, month);
-    final closing = opening + _calcRowTotal(row);
+  Future<void> closeMonth(
+    CalendarRow row,
+    DateTime month, {
+    Duration? overrideValue,
+  }) async {
+    Duration closing = .zero;
+    if (overrideValue != null) {
+      closing = overrideValue;
+    } else {
+      final opening = await calcOpeningBalance(row.employee, month);
+      closing = opening + calcRowTotal(row);
+    }
     return _database.saveMonthlyBalance(row.employee.id, month, closing);
   }
 

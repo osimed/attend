@@ -46,14 +46,6 @@ class ExportService {
     final pdf = pw.Document();
     final daysInMonth = DateUtils.getDaysInMonth(month.year, month.month);
 
-    final team = rows.first.employee.team;
-    final singleId = rows.singleOrNull?.employee.id;
-    final prevAttns = await _attendService.getAttendancesUpToMonth(
-      team,
-      month,
-      employeeId: singleId,
-    );
-
     for (final row in rows) {
       final List<_DayData> days = [];
 
@@ -135,8 +127,9 @@ class ExportService {
       }
 
       final initCollected = row.employee.collected;
-      final prevCollected = _attendService.calcCollected(
-        prevAttns[row.employee.id],
+      final prevCollected = await _attendService.calcOpeningBalance(
+        row.employee,
+        month,
       );
       final collected = prevCollected + initCollected;
 

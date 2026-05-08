@@ -11,6 +11,7 @@ import 'package:attend/features/header_panel/blocs/header_panel_bloc.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_event.dart';
 import 'package:attend/features/header_panel/blocs/header_panel_state.dart';
 import 'package:attend/features/header_panel/views/header_panel.dart';
+import 'package:attend/pages/balance_page.dart';
 import 'package:attend/pages/settings_page.dart';
 import 'package:attend/services/calendar_service.dart';
 import 'package:attend/services/export_service.dart';
@@ -64,6 +65,16 @@ class CalendarPage extends StatelessWidget {
                 return TextButton(
                   onPressed: () {
                     context.read<HeaderPanelBloc>().add(SeekToMonth());
+                  },
+                  onLongPress: () {
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (_) => BlocProvider.value(
+                          value: locator.get<CalendarGridBloc>(),
+                          child: const BalancePage(),
+                        ),
+                      ),
+                    );
                   },
                   child: Row(
                     mainAxisSize: .min,
