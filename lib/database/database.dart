@@ -383,6 +383,7 @@ class AppDatabase extends _$AppDatabase {
           team: Value(employee.team),
           job: Value(employee.job),
           collected: Value(employee.collected),
+          sortOrder: Value(employee.sortOrder),
           leaveDate: Value(employee.leaveDate),
           createdAt: Value(employee.createdAt),
         ),
