@@ -33,7 +33,7 @@ extension HoursParser on String {
     if (value == null) return null;
     final parsedTime = value.abs().toString().split('.');
     final h = int.parse(parsedTime.first);
-    final m = int.parse(parsedTime.last);
+    final m = int.parse(parsedTime.last.padRight(2, '0'));
     if (m < 0 || m > 60) return null;
     final dur = Duration(hours: h, minutes: m);
     return value.isNegative ? -dur : dur;
