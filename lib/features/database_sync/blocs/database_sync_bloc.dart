@@ -97,12 +97,12 @@ class DatabaseSyncBloc extends Bloc<DatabaseSyncEvent, DatabaseSyncState> {
     bool allSynced = false;
 
     while (!allSynced) {
-      final logs = await _attendService.getChangeLogs(id);
+      final dLogs = await _attendService.getChangeLogs(id);
       io.HttpClient client = io.HttpClient();
       try {
         final url = Uri.parse('http://$host:$port/sync');
         final req = await client.postUrl(url);
-        final payload = jsonEncode({"logs": logs, "device": device});
+        final payload = jsonEncode({"logs": dLogs, "device": device});
         req.add(utf8.encoder.convert(payload));
         await req.flush();
         final resp = await req.close();
@@ -114,10 +114,10 @@ class DatabaseSyncBloc extends Bloc<DatabaseSyncEvent, DatabaseSyncState> {
         final rChanges = data["logs"] as List;
         final rLogs = rChanges.map((l) => ChangeLog.fromJson(l)).toList();
         await _attendService.syncRemoteChanges(rLogs);
-        final ts = rLogs.isNotEmpty ? rLogs.last.timestamp : DateTime.now();
+        final ts = dLogs.isNotEmpty ? dLogs.last.timestamp : DateTime.now();
         await _attendService.updateSyncCursor(id, ts);
 
-        allSynced = rLogs.length < 1000 && logs.length < 1000;
+        allSynced = rLogs.length < 1000 && dLogs.length < 1000;
       } catch (_) {
         emit(
           DatabaseSyncSyncedMode(
