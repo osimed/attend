@@ -27,7 +27,7 @@ extension FormatTime on Duration {
 
 extension HoursParser on String {
   Duration? parseTime() {
-    if (isEmpty) return .zero;
+    if (isEmpty) return null;
     final time = replaceAll(',', '.');
     final value = double.tryParse(time);
     if (value == null) return null;

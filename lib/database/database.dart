@@ -142,7 +142,8 @@ class MonthlyBalanceTable extends Table {
   IntColumn get employeeId =>
       integer().references(EmployeeTable, #id, onDelete: .cascade)();
   DateTimeColumn get month => dateTime()();
-  IntColumn get closingBalence => integer().map(const DurationConverter())();
+  IntColumn get closingBalance => integer().map(const DurationConverter())();
+  BoolColumn get isOverridden => boolean()();
 
   @override
   Set<Column> get primaryKey => {employeeId, month};
@@ -250,7 +251,12 @@ class AppDatabase extends _$AppDatabase {
         await m.addColumn(employeeTable, employeeTable.createdAt);
       }
       if (from < 8) {
-        await m.addColumn(employeeTable, employeeTable.sap);
+        await customStatement(
+          'ALTER TABLE employee_table ADD COLUMN sap INTEGER',
+        );
+        await customStatement(
+          'UPDATE employee_table SET sap = id WHERE sap IS NULL',
+        );
         await m.addColumn(employeeTable, employeeTable.sortOrder);
         await m.createTable(monthlyBalanceTable);
       }
@@ -368,7 +374,7 @@ class AppDatabase extends _$AppDatabase {
           );
       await changeLogTable.insertOnConflictUpdate(logC);
 
-      employeeTable.insertOnConflictUpdate(
+      await employeeTable.insertOnConflictUpdate(
         EmployeeTableCompanion(
           id: employee.id != -1 ? Value(employee.id) : const Value.absent(),
           sap: Value(employee.sap),
@@ -532,7 +538,14 @@ class AppDatabase extends _$AppDatabase {
               final emplId = payload["employeeId"] as int;
               final month = DateTime.parse(payload["month"]);
               final balance = Duration(minutes: payload["balance"]);
-              await saveMonthlyBalance(emplId, month, balance, log: entry);
+              final isOverridden = payload["is_overridden"] as bool;
+              await saveMonthlyBalance(
+                emplId,
+                month,
+                balance,
+                isOverridden,
+                log: entry,
+              );
           }
       }
     }
@@ -597,10 +610,11 @@ class AppDatabase extends _$AppDatabase {
   Future<void> saveMonthlyBalance(
     int employeeId,
     DateTime month,
-    Duration balance, {
+    Duration balance,
+    bool isOverridden, {
     ChangeLog? log,
   }) async {
-    transaction(() async {
+    await transaction(() async {
       // log the action
       final logC =
           log?.toCompanion(true) ??
@@ -615,6 +629,7 @@ class AppDatabase extends _$AppDatabase {
                 'employeeId': employeeId,
                 'month': month.toIso8601String(),
                 'balance': balance.inMinutes,
+                'is_overridden': isOverridden,
               }),
             ),
           );
@@ -624,7 +639,8 @@ class AppDatabase extends _$AppDatabase {
         MonthlyBalanceTableCompanion(
           employeeId: Value(employeeId),
           month: Value(DateTime(month.year, month.month)),
-          closingBalence: Value(balance),
+          closingBalance: Value(balance),
+          isOverridden: Value(isOverridden),
         ),
       );
     });

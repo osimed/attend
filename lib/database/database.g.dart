@@ -1129,18 +1129,37 @@ class $MonthlyBalanceTableTable extends MonthlyBalanceTable
     requiredDuringInsert: true,
   );
   @override
-  late final GeneratedColumnWithTypeConverter<Duration, int> closingBalence =
+  late final GeneratedColumnWithTypeConverter<Duration, int> closingBalance =
       GeneratedColumn<int>(
-        'closing_balence',
+        'closing_balance',
         aliasedName,
         false,
         type: DriftSqlType.int,
         requiredDuringInsert: true,
       ).withConverter<Duration>(
-        $MonthlyBalanceTableTable.$converterclosingBalence,
+        $MonthlyBalanceTableTable.$converterclosingBalance,
       );
+  static const VerificationMeta _isOverriddenMeta = const VerificationMeta(
+    'isOverridden',
+  );
   @override
-  List<GeneratedColumn> get $columns => [employeeId, month, closingBalence];
+  late final GeneratedColumn<bool> isOverridden = GeneratedColumn<bool>(
+    'is_overridden',
+    aliasedName,
+    false,
+    type: DriftSqlType.bool,
+    requiredDuringInsert: true,
+    defaultConstraints: GeneratedColumn.constraintIsAlways(
+      'CHECK ("is_overridden" IN (0, 1))',
+    ),
+  );
+  @override
+  List<GeneratedColumn> get $columns => [
+    employeeId,
+    month,
+    closingBalance,
+    isOverridden,
+  ];
   @override
   String get aliasedName => _alias ?? actualTableName;
   @override
@@ -1169,6 +1188,17 @@ class $MonthlyBalanceTableTable extends MonthlyBalanceTable
     } else if (isInserting) {
       context.missing(_monthMeta);
     }
+    if (data.containsKey('is_overridden')) {
+      context.handle(
+        _isOverriddenMeta,
+        isOverridden.isAcceptableOrUnknown(
+          data['is_overridden']!,
+          _isOverriddenMeta,
+        ),
+      );
+    } else if (isInserting) {
+      context.missing(_isOverriddenMeta);
+    }
     return context;
   }
 
@@ -1186,13 +1216,17 @@ class $MonthlyBalanceTableTable extends MonthlyBalanceTable
         DriftSqlType.dateTime,
         data['${effectivePrefix}month'],
       )!,
-      closingBalence: $MonthlyBalanceTableTable.$converterclosingBalence
+      closingBalance: $MonthlyBalanceTableTable.$converterclosingBalance
           .fromSql(
             attachedDatabase.typeMapping.read(
               DriftSqlType.int,
-              data['${effectivePrefix}closing_balence'],
+              data['${effectivePrefix}closing_balance'],
             )!,
           ),
+      isOverridden: attachedDatabase.typeMapping.read(
+        DriftSqlType.bool,
+        data['${effectivePrefix}is_overridden'],
+      )!,
     );
   }
 
@@ -1201,18 +1235,20 @@ class $MonthlyBalanceTableTable extends MonthlyBalanceTable
     return $MonthlyBalanceTableTable(attachedDatabase, alias);
   }
 
-  static JsonTypeConverter2<Duration, int, int> $converterclosingBalence =
+  static JsonTypeConverter2<Duration, int, int> $converterclosingBalance =
       const DurationConverter();
 }
 
 class MonthlyBalance extends DataClass implements Insertable<MonthlyBalance> {
   final int employeeId;
   final DateTime month;
-  final Duration closingBalence;
+  final Duration closingBalance;
+  final bool isOverridden;
   const MonthlyBalance({
     required this.employeeId,
     required this.month,
-    required this.closingBalence,
+    required this.closingBalance,
+    required this.isOverridden,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -1220,12 +1256,13 @@ class MonthlyBalance extends DataClass implements Insertable<MonthlyBalance> {
     map['employee_id'] = Variable<int>(employeeId);
     map['month'] = Variable<DateTime>(month);
     {
-      map['closing_balence'] = Variable<int>(
-        $MonthlyBalanceTableTable.$converterclosingBalence.toSql(
-          closingBalence,
+      map['closing_balance'] = Variable<int>(
+        $MonthlyBalanceTableTable.$converterclosingBalance.toSql(
+          closingBalance,
         ),
       );
     }
+    map['is_overridden'] = Variable<bool>(isOverridden);
     return map;
   }
 
@@ -1233,7 +1270,8 @@ class MonthlyBalance extends DataClass implements Insertable<MonthlyBalance> {
     return MonthlyBalanceTableCompanion(
       employeeId: Value(employeeId),
       month: Value(month),
-      closingBalence: Value(closingBalence),
+      closingBalance: Value(closingBalance),
+      isOverridden: Value(isOverridden),
     );
   }
 
@@ -1245,8 +1283,9 @@ class MonthlyBalance extends DataClass implements Insertable<MonthlyBalance> {
     return MonthlyBalance(
       employeeId: serializer.fromJson<int>(json['employeeId']),
       month: serializer.fromJson<DateTime>(json['month']),
-      closingBalence: $MonthlyBalanceTableTable.$converterclosingBalence
-          .fromJson(serializer.fromJson<int>(json['closingBalence'])),
+      closingBalance: $MonthlyBalanceTableTable.$converterclosingBalance
+          .fromJson(serializer.fromJson<int>(json['closingBalance'])),
+      isOverridden: serializer.fromJson<bool>(json['isOverridden']),
     );
   }
   @override
@@ -1255,22 +1294,25 @@ class MonthlyBalance extends DataClass implements Insertable<MonthlyBalance> {
     return <String, dynamic>{
       'employeeId': serializer.toJson<int>(employeeId),
       'month': serializer.toJson<DateTime>(month),
-      'closingBalence': serializer.toJson<int>(
-        $MonthlyBalanceTableTable.$converterclosingBalence.toJson(
-          closingBalence,
+      'closingBalance': serializer.toJson<int>(
+        $MonthlyBalanceTableTable.$converterclosingBalance.toJson(
+          closingBalance,
         ),
       ),
+      'isOverridden': serializer.toJson<bool>(isOverridden),
     };
   }
 
   MonthlyBalance copyWith({
     int? employeeId,
     DateTime? month,
-    Duration? closingBalence,
+    Duration? closingBalance,
+    bool? isOverridden,
   }) => MonthlyBalance(
     employeeId: employeeId ?? this.employeeId,
     month: month ?? this.month,
-    closingBalence: closingBalence ?? this.closingBalence,
+    closingBalance: closingBalance ?? this.closingBalance,
+    isOverridden: isOverridden ?? this.isOverridden,
   );
   MonthlyBalance copyWithCompanion(MonthlyBalanceTableCompanion data) {
     return MonthlyBalance(
@@ -1278,9 +1320,12 @@ class MonthlyBalance extends DataClass implements Insertable<MonthlyBalance> {
           ? data.employeeId.value
           : this.employeeId,
       month: data.month.present ? data.month.value : this.month,
-      closingBalence: data.closingBalence.present
-          ? data.closingBalence.value
-          : this.closingBalence,
+      closingBalance: data.closingBalance.present
+          ? data.closingBalance.value
+          : this.closingBalance,
+      isOverridden: data.isOverridden.present
+          ? data.isOverridden.value
+          : this.isOverridden,
     );
   }
 
@@ -1289,51 +1334,60 @@ class MonthlyBalance extends DataClass implements Insertable<MonthlyBalance> {
     return (StringBuffer('MonthlyBalance(')
           ..write('employeeId: $employeeId, ')
           ..write('month: $month, ')
-          ..write('closingBalence: $closingBalence')
+          ..write('closingBalance: $closingBalance, ')
+          ..write('isOverridden: $isOverridden')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode => Object.hash(employeeId, month, closingBalence);
+  int get hashCode =>
+      Object.hash(employeeId, month, closingBalance, isOverridden);
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
       (other is MonthlyBalance &&
           other.employeeId == this.employeeId &&
           other.month == this.month &&
-          other.closingBalence == this.closingBalence);
+          other.closingBalance == this.closingBalance &&
+          other.isOverridden == this.isOverridden);
 }
 
 class MonthlyBalanceTableCompanion extends UpdateCompanion<MonthlyBalance> {
   final Value<int> employeeId;
   final Value<DateTime> month;
-  final Value<Duration> closingBalence;
+  final Value<Duration> closingBalance;
+  final Value<bool> isOverridden;
   final Value<int> rowid;
   const MonthlyBalanceTableCompanion({
     this.employeeId = const Value.absent(),
     this.month = const Value.absent(),
-    this.closingBalence = const Value.absent(),
+    this.closingBalance = const Value.absent(),
+    this.isOverridden = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   MonthlyBalanceTableCompanion.insert({
     required int employeeId,
     required DateTime month,
-    required Duration closingBalence,
+    required Duration closingBalance,
+    required bool isOverridden,
     this.rowid = const Value.absent(),
   }) : employeeId = Value(employeeId),
        month = Value(month),
-       closingBalence = Value(closingBalence);
+       closingBalance = Value(closingBalance),
+       isOverridden = Value(isOverridden);
   static Insertable<MonthlyBalance> custom({
     Expression<int>? employeeId,
     Expression<DateTime>? month,
-    Expression<int>? closingBalence,
+    Expression<int>? closingBalance,
+    Expression<bool>? isOverridden,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
       if (employeeId != null) 'employee_id': employeeId,
       if (month != null) 'month': month,
-      if (closingBalence != null) 'closing_balence': closingBalence,
+      if (closingBalance != null) 'closing_balance': closingBalance,
+      if (isOverridden != null) 'is_overridden': isOverridden,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1341,13 +1395,15 @@ class MonthlyBalanceTableCompanion extends UpdateCompanion<MonthlyBalance> {
   MonthlyBalanceTableCompanion copyWith({
     Value<int>? employeeId,
     Value<DateTime>? month,
-    Value<Duration>? closingBalence,
+    Value<Duration>? closingBalance,
+    Value<bool>? isOverridden,
     Value<int>? rowid,
   }) {
     return MonthlyBalanceTableCompanion(
       employeeId: employeeId ?? this.employeeId,
       month: month ?? this.month,
-      closingBalence: closingBalence ?? this.closingBalence,
+      closingBalance: closingBalance ?? this.closingBalance,
+      isOverridden: isOverridden ?? this.isOverridden,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1361,12 +1417,15 @@ class MonthlyBalanceTableCompanion extends UpdateCompanion<MonthlyBalance> {
     if (month.present) {
       map['month'] = Variable<DateTime>(month.value);
     }
-    if (closingBalence.present) {
-      map['closing_balence'] = Variable<int>(
-        $MonthlyBalanceTableTable.$converterclosingBalence.toSql(
-          closingBalence.value,
+    if (closingBalance.present) {
+      map['closing_balance'] = Variable<int>(
+        $MonthlyBalanceTableTable.$converterclosingBalance.toSql(
+          closingBalance.value,
         ),
       );
+    }
+    if (isOverridden.present) {
+      map['is_overridden'] = Variable<bool>(isOverridden.value);
     }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
@@ -1379,7 +1438,8 @@ class MonthlyBalanceTableCompanion extends UpdateCompanion<MonthlyBalance> {
     return (StringBuffer('MonthlyBalanceTableCompanion(')
           ..write('employeeId: $employeeId, ')
           ..write('month: $month, ')
-          ..write('closingBalence: $closingBalence, ')
+          ..write('closingBalance: $closingBalance, ')
+          ..write('isOverridden: $isOverridden, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2962,14 +3022,16 @@ typedef $$MonthlyBalanceTableTableCreateCompanionBuilder =
     MonthlyBalanceTableCompanion Function({
       required int employeeId,
       required DateTime month,
-      required Duration closingBalence,
+      required Duration closingBalance,
+      required bool isOverridden,
       Value<int> rowid,
     });
 typedef $$MonthlyBalanceTableTableUpdateCompanionBuilder =
     MonthlyBalanceTableCompanion Function({
       Value<int> employeeId,
       Value<DateTime> month,
-      Value<Duration> closingBalence,
+      Value<Duration> closingBalance,
+      Value<bool> isOverridden,
       Value<int> rowid,
     });
 
@@ -3023,11 +3085,16 @@ class $$MonthlyBalanceTableTableFilterComposer
     builder: (column) => ColumnFilters(column),
   );
 
-  ColumnWithTypeConverterFilters<Duration, Duration, int> get closingBalence =>
+  ColumnWithTypeConverterFilters<Duration, Duration, int> get closingBalance =>
       $composableBuilder(
-        column: $table.closingBalence,
+        column: $table.closingBalance,
         builder: (column) => ColumnWithTypeConverterFilters(column),
       );
+
+  ColumnFilters<bool> get isOverridden => $composableBuilder(
+    column: $table.isOverridden,
+    builder: (column) => ColumnFilters(column),
+  );
 
   $$EmployeeTableTableFilterComposer get employeeId {
     final $$EmployeeTableTableFilterComposer composer = $composerBuilder(
@@ -3067,8 +3134,13 @@ class $$MonthlyBalanceTableTableOrderingComposer
     builder: (column) => ColumnOrderings(column),
   );
 
-  ColumnOrderings<int> get closingBalence => $composableBuilder(
-    column: $table.closingBalence,
+  ColumnOrderings<int> get closingBalance => $composableBuilder(
+    column: $table.closingBalance,
+    builder: (column) => ColumnOrderings(column),
+  );
+
+  ColumnOrderings<bool> get isOverridden => $composableBuilder(
+    column: $table.isOverridden,
     builder: (column) => ColumnOrderings(column),
   );
 
@@ -3108,11 +3180,16 @@ class $$MonthlyBalanceTableTableAnnotationComposer
   GeneratedColumn<DateTime> get month =>
       $composableBuilder(column: $table.month, builder: (column) => column);
 
-  GeneratedColumnWithTypeConverter<Duration, int> get closingBalence =>
+  GeneratedColumnWithTypeConverter<Duration, int> get closingBalance =>
       $composableBuilder(
-        column: $table.closingBalence,
+        column: $table.closingBalance,
         builder: (column) => column,
       );
+
+  GeneratedColumn<bool> get isOverridden => $composableBuilder(
+    column: $table.isOverridden,
+    builder: (column) => column,
+  );
 
   $$EmployeeTableTableAnnotationComposer get employeeId {
     final $$EmployeeTableTableAnnotationComposer composer = $composerBuilder(
@@ -3176,24 +3253,28 @@ class $$MonthlyBalanceTableTableTableManager
               ({
                 Value<int> employeeId = const Value.absent(),
                 Value<DateTime> month = const Value.absent(),
-                Value<Duration> closingBalence = const Value.absent(),
+                Value<Duration> closingBalance = const Value.absent(),
+                Value<bool> isOverridden = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => MonthlyBalanceTableCompanion(
                 employeeId: employeeId,
                 month: month,
-                closingBalence: closingBalence,
+                closingBalance: closingBalance,
+                isOverridden: isOverridden,
                 rowid: rowid,
               ),
           createCompanionCallback:
               ({
                 required int employeeId,
                 required DateTime month,
-                required Duration closingBalence,
+                required Duration closingBalance,
+                required bool isOverridden,
                 Value<int> rowid = const Value.absent(),
               }) => MonthlyBalanceTableCompanion.insert(
                 employeeId: employeeId,
                 month: month,
-                closingBalence: closingBalence,
+                closingBalance: closingBalance,
+                isOverridden: isOverridden,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

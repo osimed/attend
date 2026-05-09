@@ -67,7 +67,10 @@ class AttendService {
     );
   }
 
-  Future<Duration> calcOpeningBalance(Employee employee, DateTime month) async {
+  Future<({Duration balance, bool isOverridden})> calcOpeningBalance(
+    Employee employee,
+    DateTime month,
+  ) async {
     final snapshot = await _database.getLastMonthlyBalance(
       employee.id,
       DateTime(month.year, month.month),
@@ -79,7 +82,10 @@ class AttendService {
       );
       if (snapshotNextMonth.year == month.year &&
           snapshotNextMonth.month == month.month) {
-        return snapshot.closingBalence;
+        return (
+          balance: snapshot.closingBalance,
+          isOverridden: snapshot.isOverridden,
+        );
       }
       final allAttns = await _database.getAttendancesUpToMonth(
         employee.team,
@@ -89,7 +95,8 @@ class AttendService {
       final gapAttns = (allAttns[employee.id] ?? [])
           .where((a) => !a.date.isBefore(snapshotNextMonth))
           .toList();
-      return snapshot.closingBalence + calcCollected(gapAttns);
+      final balance = snapshot.closingBalance + calcCollected(gapAttns);
+      return (balance: balance, isOverridden: snapshot.isOverridden);
     }
 
     final allAttns = await _database.getAttendancesUpToMonth(
@@ -97,7 +104,9 @@ class AttendService {
       DateTime(month.year, month.month),
       employeeId: employee.id,
     );
-    return employee.collected + calcCollected(allAttns[employee.id] ?? []);
+    final balance =
+        employee.collected + calcCollected(allAttns[employee.id] ?? []);
+    return (balance: balance, isOverridden: false);
   }
 
   Future<void> closeMonth(
@@ -110,9 +119,14 @@ class AttendService {
       closing = overrideValue;
     } else {
       final opening = await calcOpeningBalance(row.employee, month);
-      closing = opening + calcRowTotal(row);
+      closing = opening.balance + calcRowTotal(row);
     }
-    return _database.saveMonthlyBalance(row.employee.id, month, closing);
+    return _database.saveMonthlyBalance(
+      row.employee.id,
+      month,
+      closing,
+      overrideValue != null,
+    );
   }
 
   Duration? calcTimeDiff(Attendance? attendance) {

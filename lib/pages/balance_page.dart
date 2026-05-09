@@ -21,6 +21,7 @@ class _BalancePageState extends State<BalancePage> {
   @override
   Widget build(BuildContext context) {
     return BlocBuilder<CalendarGridBloc, CalendarGridState>(
+      buildWhen: (_, newState) => newState is MonthlyCalendarLoaded,
       builder: (context, _) {
         final state = context.read<CalendarGridBloc>().state;
         final nextMonth = DateTime(state.month.year, state.month.month + 1);
@@ -31,12 +32,6 @@ class _BalancePageState extends State<BalancePage> {
               '${state.month.formatMonth()}  →  ${nextMonth.formatMonth()}',
               style: const TextStyle(fontSize: 18),
             ),
-            actions: [
-              IconButton(
-                onPressed: () {},
-                icon: const Icon(Icons.done_all),
-              ),
-            ],
           ),
           body: ListView.builder(
             itemCount: state.calendar.length,
@@ -76,16 +71,35 @@ class _BalancePageState extends State<BalancePage> {
                                   controller: _textController,
                                   decoration: InputDecoration(
                                     filled: true,
-                                    hintText: result.formatTime(),
+                                    hintText: result.balance.formatTime(),
                                   ),
                                 ),
                               );
                             }
-                            return Text(
-                              result.formatTime(),
-                              style: const TextStyle(
-                                fontSize: 18,
-                                fontWeight: .w800,
+                            return Container(
+                              decoration: BoxDecoration(
+                                borderRadius: BorderRadius.circular(8),
+                                color: result.isOverridden
+                                    ? Theme.of(
+                                        context,
+                                      ).colorScheme.tertiaryContainer
+                                    : null,
+                              ),
+                              padding: const EdgeInsets.symmetric(
+                                vertical: 4,
+                                horizontal: 8,
+                              ),
+                              child: Text(
+                                result.balance.formatTime(),
+                                style: TextStyle(
+                                  fontSize: 18,
+                                  fontWeight: .w800,
+                                  color: result.isOverridden
+                                      ? Theme.of(
+                                          context,
+                                        ).colorScheme.onTertiaryContainer
+                                      : null,
+                                ),
                               ),
                             );
                           },
@@ -99,21 +113,24 @@ class _BalancePageState extends State<BalancePage> {
                           onPressed: () async {
                             if (editingEmployee.value == index) {
                               final v = _textController.text.parseTime();
-                              await attSrv.closeMonth(
-                                state.calendar[index],
-                                state.month,
-                                overrideValue: v,
-                              );
+                              if (v != null) {
+                                await attSrv.closeMonth(
+                                  state.calendar[index],
+                                  state.month,
+                                  overrideValue: v,
+                                );
+                                locator.get<CalendarGridBloc>().add(
+                                  LoadMonthlyCalendar(
+                                    month: state.month,
+                                    team: state.team,
+                                  ),
+                                );
+                              }
                               editingEmployee.value = null;
-                              locator.get<CalendarGridBloc>().add(
-                                LoadMonthlyCalendar(
-                                  month: state.month,
-                                  team: state.team,
-                                ),
-                              );
                             } else {
                               editingEmployee.value = index;
                             }
+                            _textController.clear();
                           },
                           icon: value == index
                               ? const Icon(Icons.done)

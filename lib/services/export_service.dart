@@ -131,7 +131,7 @@ class ExportService {
         row.employee,
         month,
       );
-      final collected = prevCollected + initCollected;
+      final collected = prevCollected.balance + initCollected;
 
       pdf.addPage(
         pw.Page(

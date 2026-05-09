@@ -53,8 +53,8 @@ class DatabaseSyncBloc extends Bloc<DatabaseSyncEvent, DatabaseSyncState> {
     }
     final hosts = event.qr.barcodes.first.rawValue ?? '';
     for (final host in hosts.split('|')) {
+      io.HttpClient client = io.HttpClient();
       try {
-        io.HttpClient client = io.HttpClient();
         final url = Uri.parse('http://$host:$port/info');
         final resp = await (await client.getUrl(url)).close();
         if (resp.statusCode != 200) continue;
@@ -72,6 +72,8 @@ class DatabaseSyncBloc extends Bloc<DatabaseSyncEvent, DatabaseSyncState> {
         return;
       } catch (_) {
         continue;
+      } finally {
+        client.close(force: true);
       }
     }
     emit(DatabaseSyncNormalMode(isRunning: state.isRunning));

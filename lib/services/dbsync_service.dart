@@ -42,8 +42,6 @@ class DBSyncService {
     final info = await deviceInfo();
     final payload = {"id": info.$1, "name": info.$2};
     req.response.write(jsonEncode(payload));
-    await req.response.flush();
-    await req.response.close();
   }
 
   Future<void> serveSyncDatabase(HttpRequest req) async {
@@ -51,7 +49,10 @@ class DBSyncService {
     final payload = utf8.decoder.bind(req);
     final data = jsonDecode(await payload.join());
 
-    if (data is! Map<String, dynamic>) return;
+    if (data is! Map<String, dynamic>) {
+      req.response.statusCode = 400;
+      return;
+    }
     final remoteDeviceId = data["device"]["id"] as String;
     final remoteDeviceName = data["device"]["name"] as String;
     _ctrl.add('syncing#$remoteDeviceId#$remoteDeviceName');
