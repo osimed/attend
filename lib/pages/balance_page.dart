@@ -33,115 +33,117 @@ class _BalancePageState extends State<BalancePage> {
               style: const TextStyle(fontSize: 18),
             ),
           ),
-          body: ListView.builder(
-            itemCount: state.calendar.length,
-            itemExtent: 80,
-            itemBuilder: (context, index) {
-              final employee = state.calendar[index].employee;
+          body: SafeArea(
+            child: ListView.builder(
+              itemCount: state.calendar.length,
+              itemExtent: 80,
+              itemBuilder: (context, index) {
+                final employee = state.calendar[index].employee;
 
-              return ListTile(
-                contentPadding: const .only(left: 8),
-                leading: Text(employee.sap.toString()),
-                title: Text(
-                  employee.lastName,
-                  style: const TextStyle(fontWeight: .w700),
-                ),
-                subtitle: Text(employee.firstName),
-                trailing: Row(
-                  mainAxisSize: .min,
-                  mainAxisAlignment: .end,
-                  children: [
-                    FutureBuilder(
-                      future: attSrv.calcOpeningBalance(employee, nextMonth),
-                      builder: (context, snapshot) {
-                        if (snapshot.connectionState != .done) {
-                          return const CircularProgressIndicator();
-                        }
-                        if (snapshot.hasError || !snapshot.hasData) {
-                          return const Text('error');
-                        }
-                        final result = snapshot.data!;
-                        return ValueListenableBuilder(
-                          valueListenable: editingEmployee,
-                          builder: (context, value, child) {
-                            if (value == index) {
-                              return SizedBox(
-                                width: 100,
-                                child: TextField(
-                                  controller: _textController,
-                                  decoration: InputDecoration(
-                                    filled: true,
-                                    hintText: result.balance.formatTime(),
-                                  ),
-                                ),
-                              );
-                            }
-                            return Container(
-                              decoration: BoxDecoration(
-                                borderRadius: BorderRadius.circular(8),
-                                color: result.isOverridden
-                                    ? Theme.of(
-                                        context,
-                                      ).colorScheme.tertiaryContainer
-                                    : null,
-                              ),
-                              padding: const EdgeInsets.symmetric(
-                                vertical: 4,
-                                horizontal: 8,
-                              ),
-                              child: Text(
-                                result.balance.formatTime(),
-                                style: TextStyle(
-                                  fontSize: 18,
-                                  fontWeight: .w800,
-                                  color: result.isOverridden
-                                      ? Theme.of(
-                                          context,
-                                        ).colorScheme.onTertiaryContainer
-                                      : null,
-                                ),
-                              ),
-                            );
-                          },
-                        );
-                      },
-                    ),
-                    ValueListenableBuilder(
-                      valueListenable: editingEmployee,
-                      builder: (context, value, child) {
-                        return IconButton(
-                          onPressed: () async {
-                            if (editingEmployee.value == index) {
-                              final v = _textController.text.parseTime();
-                              if (v != null) {
-                                await attSrv.closeMonth(
-                                  state.calendar[index],
-                                  state.month,
-                                  overrideValue: v,
-                                );
-                                locator.get<CalendarGridBloc>().add(
-                                  LoadMonthlyCalendar(
-                                    month: state.month,
-                                    team: state.team,
+                return ListTile(
+                  contentPadding: const .only(left: 8),
+                  leading: Text(employee.sap.toString()),
+                  title: Text(
+                    employee.lastName,
+                    style: const TextStyle(fontWeight: .w700),
+                  ),
+                  subtitle: Text(employee.firstName),
+                  trailing: Row(
+                    mainAxisSize: .min,
+                    mainAxisAlignment: .end,
+                    children: [
+                      FutureBuilder(
+                        future: attSrv.calcOpeningBalance(employee, nextMonth),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState != .done) {
+                            return const CircularProgressIndicator();
+                          }
+                          if (snapshot.hasError || !snapshot.hasData) {
+                            return const Text('error');
+                          }
+                          final result = snapshot.data!;
+                          return ValueListenableBuilder(
+                            valueListenable: editingEmployee,
+                            builder: (context, value, child) {
+                              if (value == index) {
+                                return SizedBox(
+                                  width: 100,
+                                  child: TextField(
+                                    controller: _textController,
+                                    decoration: InputDecoration(
+                                      filled: true,
+                                      hintText: result.balance.formatTime(),
+                                    ),
                                   ),
                                 );
                               }
-                              editingEmployee.value = null;
-                            } else {
-                              editingEmployee.value = index;
-                            }
-                            _textController.clear();
-                          },
-                          icon: value == index
-                              ? const Icon(Icons.done)
-                              : const Icon(Icons.edit),
-                        );
-                      },
-                    ),
-                  ],
-                ),
-              );
-            },
+                              return Container(
+                                decoration: BoxDecoration(
+                                  borderRadius: BorderRadius.circular(8),
+                                  color: result.isOverridden
+                                      ? Theme.of(
+                                          context,
+                                        ).colorScheme.tertiaryContainer
+                                      : null,
+                                ),
+                                padding: const EdgeInsets.symmetric(
+                                  vertical: 4,
+                                  horizontal: 8,
+                                ),
+                                child: Text(
+                                  result.balance.formatTime(),
+                                  style: TextStyle(
+                                    fontSize: 18,
+                                    fontWeight: .w800,
+                                    color: result.isOverridden
+                                        ? Theme.of(
+                                            context,
+                                          ).colorScheme.onTertiaryContainer
+                                        : null,
+                                  ),
+                                ),
+                              );
+                            },
+                          );
+                        },
+                      ),
+                      ValueListenableBuilder(
+                        valueListenable: editingEmployee,
+                        builder: (context, value, child) {
+                          return IconButton(
+                            onPressed: () async {
+                              if (editingEmployee.value == index) {
+                                final v = _textController.text.parseTime();
+                                if (v != null) {
+                                  await attSrv.closeMonth(
+                                    state.calendar[index],
+                                    state.month,
+                                    overrideValue: v,
+                                  );
+                                  locator.get<CalendarGridBloc>().add(
+                                    LoadMonthlyCalendar(
+                                      month: state.month,
+                                      team: state.team,
+                                    ),
+                                  );
+                                }
+                                editingEmployee.value = null;
+                              } else {
+                                editingEmployee.value = index;
+                              }
+                              _textController.clear();
+                            },
+                            icon: value == index
+                                ? const Icon(Icons.done)
+                                : const Icon(Icons.edit),
+                          );
+                        },
+                      ),
+                    ],
+                  ),
+                );
+              },
+            ),
           ),
         );
       },

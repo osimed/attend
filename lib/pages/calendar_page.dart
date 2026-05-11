@@ -152,24 +152,26 @@ class CalendarPage extends StatelessWidget {
               ),
             ],
           ),
-          body: Column(
-            children: [
-              PopScope(
-                canPop: !context.watch<HeaderPanelBloc>().state.isOpen,
-                onPopInvokedWithResult: (didPop, _) {
-                  if (!didPop) {
-                    context.read<HeaderPanelBloc>().add(CloseHeaderPanel());
-                  }
-                },
-                child: const HeaderPanel(),
-              ),
-              const Flexible(
-                child: Padding(
-                  padding: EdgeInsets.all(2.0),
-                  child: CalendarGrid(),
+          body: SafeArea(
+            child: Column(
+              children: [
+                PopScope(
+                  canPop: !context.watch<HeaderPanelBloc>().state.isOpen,
+                  onPopInvokedWithResult: (didPop, _) {
+                    if (!didPop) {
+                      context.read<HeaderPanelBloc>().add(CloseHeaderPanel());
+                    }
+                  },
+                  child: const HeaderPanel(),
                 ),
-              ),
-            ],
+                const Flexible(
+                  child: Padding(
+                    padding: EdgeInsets.all(2.0),
+                    child: CalendarGrid(),
+                  ),
+                ),
+              ],
+            ),
           ),
         ),
       ),

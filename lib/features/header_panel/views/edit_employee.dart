@@ -173,7 +173,9 @@ class _EditEmployeeState extends State<EditEmployee> {
                 job: jobController.text,
                 team: team,
                 collected: collectedController.text.parseTime() ?? .zero,
-                sortOrder: widget.employee?.sortOrder ?? DateTime.now().millisecondsSinceEpoch,
+                sortOrder:
+                    widget.employee?.sortOrder ??
+                    DateTime.now().millisecondsSinceEpoch,
                 createdAt: widget.employee?.createdAt ?? DateTime.now(),
               ),
             ),
