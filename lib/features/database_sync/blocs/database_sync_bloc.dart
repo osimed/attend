@@ -24,6 +24,7 @@ class DatabaseSyncBloc extends Bloc<DatabaseSyncEvent, DatabaseSyncState> {
     on<DatabaseSyncServerSubEvent>(_onDatabaseSyncServerSubEvent);
     on<DatabaseSyncServerScanQR>(_onDatabaseSyncServerScanQR);
     on<DatabaseSyncServerShowQR>(_onDatabaseSyncServerShowQR);
+    on<DatabaseSyncImportExport>(_onDatabaseSyncImportExport);
 
     _sub = _dbSyncService.event.listen((ev) {
       add(DatabaseSyncServerSubEvent(ev: ev));
@@ -186,6 +187,13 @@ class DatabaseSyncBloc extends Bloc<DatabaseSyncEvent, DatabaseSyncState> {
         ),
       );
     }
+  }
+
+  Future<void> _onDatabaseSyncImportExport(
+    DatabaseSyncImportExport event,
+    Emitter<DatabaseSyncState> emit,
+  ) async {
+    emit(DatabaseSyncImportExportMode(isRunning: state.isRunning));
   }
 
   @override

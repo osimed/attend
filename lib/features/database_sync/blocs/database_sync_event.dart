@@ -24,3 +24,5 @@ class DatabaseSyncServerSubEvent extends DatabaseSyncEvent {
 class DatabaseSyncServerScanQR extends DatabaseSyncEvent {}
 
 class DatabaseSyncServerShowQR extends DatabaseSyncEvent {}
+
+class DatabaseSyncImportExport extends DatabaseSyncEvent {}

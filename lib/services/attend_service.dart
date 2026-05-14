@@ -1,10 +1,11 @@
+import 'package:attend/core/locator.dart';
 import 'package:attend/database/database.dart';
 import 'package:flutter/material.dart' show DateUtils;
 
 class AttendService {
-  final AppDatabase _database;
+  AttendService();
 
-  AttendService(this._database);
+  AppDatabase get _database => locator.get<AppDatabase>();
 
   Future<List<CalendarRow>> loadCalendar(DateTime month, Team team) async {
     final days = DateUtils.getDaysInMonth(month.year, month.month);

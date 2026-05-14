@@ -33,3 +33,7 @@ class DatabaseSyncScanQRMode extends DatabaseSyncState {
 class DatabaseSyncViewQRMode extends DatabaseSyncState {
   DatabaseSyncViewQRMode({super.isRunning = true});
 }
+
+class DatabaseSyncImportExportMode extends DatabaseSyncState {
+  DatabaseSyncImportExportMode({super.isRunning});
+}
