@@ -234,7 +234,6 @@ class ConfirmationPopup extends StatelessWidget {
   });
   @override
   Widget build(BuildContext context) {
-    // 1. Determine the primary color (Red for destructive, Blue/Theme for normal)
     final primaryColor = isDestructive ? Colors.red : Colors.blue;
     return Dialog(
       shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
@@ -254,7 +253,7 @@ class ConfirmationPopup extends StatelessWidget {
               width: 64,
               height: 64,
               decoration: BoxDecoration(
-                color: (iconColor ?? primaryColor).withOpacity(0.1),
+                color: (iconColor ?? primaryColor).withAlpha(10),
                 shape: BoxShape.circle,
               ),
               child: Icon(icon, color: iconColor ?? primaryColor, size: 32),

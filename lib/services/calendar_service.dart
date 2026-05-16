@@ -19,7 +19,17 @@ class CalendarService {
     final monthMiddle = daysInMonth ~/ 2;
     final monthHalfs = [(1, monthMiddle), (monthMiddle + 1, daysInMonth)];
     for (final half in monthHalfs) {
-      for (final rowChunk in rows.chunk(22)) {
+      final filteredRows = rows.where((row) {
+        var ld = row.employee.leaveDate;
+        if (ld == null) return true;
+        if (ld.year != month.year || ld.month != month.month) {
+          return true;
+        }
+        if (ld.day > half.$2) return true;
+        return ld.day >= half.$1 && ld.day <= half.$2;
+      }).toList();
+
+      for (final rowChunk in filteredRows.chunk(22)) {
         pdf.addPage(
           pw.Page(
             pageFormat: .a4,
@@ -162,7 +172,7 @@ class CalendarService {
           child: pw.Center(
             child: pw.Text(
               row.employee.sap.toString(),
-              style: const pw.TextStyle(fontSize: 5),
+              style: const pw.TextStyle(fontSize: 6),
             ),
           ),
         ),
@@ -226,7 +236,8 @@ class CalendarService {
             child: pw.Center(
               child: pw.Text(
                 leaveReason?.fullname ?? '',
-                style: pw.TextStyle(fontSize: l <= 6 ? 7 : 11),
+                style: pw.TextStyle(fontSize: l <= 6 ? 7 : 10),
+                textAlign: .center,
               ),
             ),
           ),
