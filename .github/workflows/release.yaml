@@ -35,6 +35,21 @@ jobs:
       - name: Flutter analyse
         run: flutter analyze
 
+      - name: Decode keystore
+        run: |
+          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > android/app/keystore.jks
+          if [ ! -f "android/app/keystore.jks" ]; then
+            echo "keystore file not found!"
+            exit 1
+          fi
+
+      - name: Create key.properties
+        run: |
+          echo "storeFile=keystore.jks" >> android/key.properties
+          echo "storePassword=${{ secrets.STORE_PASSWORD }}" >> android/key.properties
+          echo "keyPassword=${{ secrets.KEY_PASSWORD }}" >> android/key.properties
+          echo "keyAlias=${{ secrets.KEY_ALIAS }}" >> android/key.properties
+
       - name: Build APK
         run: flutter build apk --release --split-per-abi
 
