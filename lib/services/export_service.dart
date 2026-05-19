@@ -126,12 +126,10 @@ class ExportService {
         );
       }
 
-      final initCollected = row.employee.collected;
-      final prevCollected = await _attendService.calcOpeningBalance(
+      final collected = await _attendService.calcOpeningBalance(
         row.employee,
         month,
       );
-      final collected = prevCollected.balance + initCollected;
 
       pdf.addPage(
         pw.Page(
@@ -142,7 +140,7 @@ class ExportService {
               crossAxisAlignment: .stretch,
               children: [
                 pw.Text(
-                  collected.formatTime(),
+                  collected.balance.formatTime(),
                   style: _collectedStyle,
                   textAlign: .center,
                 ),
@@ -155,7 +153,11 @@ class ExportService {
                   children: [
                     _buildColumnHeaders(),
                     ...days.map((d) => _buildDayRow(d)),
-                    _buildTotalRow(days, weekSupp + weekRecup, collected),
+                    _buildTotalRow(
+                      days,
+                      weekSupp + weekRecup,
+                      collected.balance,
+                    ),
                   ],
                 ),
                 pw.SizedBox(height: 16),
