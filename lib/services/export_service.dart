@@ -160,7 +160,19 @@ class ExportService {
                     ),
                   ],
                 ),
-                pw.SizedBox(height: 16),
+                pw.Table(
+                  columnWidths: _columns(),
+                  children: [
+                    _buildTotalDaysRow(
+                      days,
+                      weekSupp + weekRecup,
+                      collected.balance,
+                      rDays,
+                      cDays,
+                    ),
+                  ],
+                ),
+                pw.SizedBox(height: 6),
                 _buildSignatureRow(rDays, cDays),
               ],
             );
@@ -384,6 +396,52 @@ class ExportService {
     );
   }
 
+  pw.TableRow _buildTotalDaysRow(
+    List<_DayData> days,
+    Duration leftover,
+    Duration collected,
+    double rDays,
+    double cDays,
+  ) {
+    const style = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
+    Duration total = leftover;
+    for (final day in days) {
+      if (day.weekSum.isNotEmpty) {
+        total += day.weekSum.first + day.weekSum.last;
+      }
+    }
+    final d = (total + collected).inMinutes / (8 * 60);
+    return pw.TableRow(
+      children: [
+        pw.TableCell(columnSpan: 5, child: pw.SizedBox.shrink()),
+        pw.SizedBox(
+          height: 20,
+          child: pw.Center(
+            child: pw.Text('${Status.r.fullname}: $rDays', style: style),
+          ),
+        ),
+        pw.SizedBox(
+          height: 20,
+          child: pw.Center(
+            child: pw.Text('${Status.c.fullname}: $cDays', style: style),
+          ),
+        ),
+        pw.TableCell(
+          child: pw.Container(
+            height: 20,
+            decoration: pw.BoxDecoration(
+              color: PdfColors.grey300,
+              border: pw.Border.all(width: 1.0),
+            ),
+            child: pw.Center(
+              child: pw.Text(d.toStringAsFixed(2), style: _cellStyle),
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
   pw.Widget _buildSignatureRow(double rDays, double cDays) {
     const style = pw.TextStyle(fontSize: 8, fontWeight: pw.FontWeight.bold);
     return pw.Row(
@@ -393,15 +451,6 @@ class ExportService {
           child: pw.Text(
             "Directeur d'entrepôt et de logistique\nsignature",
             style: style,
-          ),
-        ),
-        pw.Expanded(
-          child: pw.Column(
-            mainAxisSize: .min,
-            children: [
-              pw.Text('${Status.r.fullname}: $rDays', style: style),
-              pw.Text('${Status.c.fullname}: $cDays', style: style),
-            ],
           ),
         ),
       ],
