@@ -20,6 +20,17 @@ class CalendarService {
     final monthHalfs = [(1, monthMiddle), (monthMiddle + 1, daysInMonth)];
     for (final half in monthHalfs) {
       final filteredRows = rows.where((row) {
+        if (half.$1 == 1) {
+          final hasData =
+              Iterable.generate(half.$2 - half.$1 + 1, (i) => half.$1 + i).any((
+                day,
+              ) {
+                final a = row.attendances[day];
+                return a != null && a.status != .empty;
+              });
+          if (!hasData) return false;
+        }
+
         var ld = row.employee.leaveDate;
         if (ld == null) return true;
         if (ld.year != month.year || ld.month != month.month) {
