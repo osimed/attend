@@ -306,6 +306,7 @@ String monthName(DateTime date) {
     'Juillet',
     'Août',
     'Septembre',
+    'Octobre',
     'Novembre',
     'Décembre',
   ];
